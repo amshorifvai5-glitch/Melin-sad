@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorif Ahmmed — দৈনিক কাজের রিপোর্ট পোর্টাল</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --surface-bg: #f8fafc;
+            --accent-primary: #4f46e5;
+            --accent-secondary: #0f172a;
+        }
+        body {
+            font-family: 'Hind Siliguri', sans-serif;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(79, 70, 229, 0.08), transparent 36%),
+                radial-gradient(circle at 88% 14%, rgba(14, 165, 233, 0.08), transparent 34%),
+                linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .portal-header {
+            background: linear-gradient(135deg, #0b1120 0%, #172554 55%, #0f172a 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 8px 24px -6px rgba(15, 23, 42, 0.06);
+        }
+        .menu-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .menu-card:hover {
+            border-color: #4f46e5;
+            box-shadow: 0 12px 26px -6px rgba(79, 70, 229, 0.14);
+            transform: translateY(-2px);
+        }
+        .page-section {
+            display: none;
+            animation: fadeIn 0.22s ease-out;
+        }
+        .page-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        header input[type="time"]::-webkit-calendar-picker-indicator,
+        header input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            opacity: 0.8;
+            cursor: pointer;
+        }
+        .map-desk-btn {
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .map-desk-btn:active {
+            transform: scale(0.92);
+        }
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-14">
+
+    <!-- কপি নোটিফিকেশন টোস্ট -->
+    <div id="copyToast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl z-50 hidden border border-slate-700">
+        ✓ কপি করা হয়েছে
+    </div>
+
+    <!-- সাইড নেভিগেশন ড্রয়ার -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-950/60 z-40 hidden backdrop-blur-xs transition-opacity"></div>
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 bg-slate-900 text-slate-100 z-50 shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col border-r border-slate-800">
+        <div class="p-5 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/50">
+            <div class="flex items-center gap-3">
+                <img id="sidebarAvatar" src="https://ui-avatars.com/api/?name=Sorif+Ahmmed&background=4f46e5&color=fff&size=128" alt="Profile" class="w-11 h-11 rounded-full object-cover ring-2 ring-indigo-400">
+                <div>
+                    <h2 class="font-bold text-base text-white leading-tight">Sorif Ahmmed</h2>
+                    <p class="text-[11px] font-medium text-indigo-300 leading-tight mt-0.5">Junior Associate • ID: 855</p>
+                </div>
+            </div>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <button onclick="navigateTo('home'); toggleSidebar()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-semibold bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-950/50">
+                <span>🏠</span> হোম ড্যাশবোর্ড
+            </button>
+            <div class="border-t border-slate-800 my-3"></div>
+            <div id="sidebarMenuLinks" class="space-y-1"></div>
+        </div>
+    </aside>
+
+    <!-- ওয়েবসাইট টপ হেডার -->
+    <header class="portal-header text-white sticky top-0 z-30 shadow-lg shadow-slate-900/20 border-b border-white/10">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <!-- বাম পাশ: থ্রি-লাইন মেনু + প্রোফাইল ছবি, নাম ও পদ -->
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleSidebar()" class="p-2 -ml-2 rounded-xl text-slate-200 hover:bg-white/10 active:bg-white/20 transition-colors" title="মেনু">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+
+                    <div class="flex items-center gap-3">
+                        <label for="photoUpload" class="relative cursor-pointer group shrink-0" title="ছবি পরিবর্তন করতে ক্লিক করুন">
+                            <div class="p-0.5 rounded-full bg-gradient-to-tr from-amber-400 via-indigo-400 to-emerald-400">
+                                <img id="headerAvatar" src="https://ui-avatars.com/api/?name=Sorif+Ahmmed&background=172554&color=fff&size=128" alt="Sorif Ahmmed" class="w-12 h-12 rounded-full object-cover border-2 border-slate-900">
+                            </div>
+                            <span class="absolute bottom-0 right-0 bg-indigo-600 text-white rounded-full p-1 text-[9px] leading-none border border-slate-900 shadow-sm">📷</span>
+                        </label>
+                        <input type="file" id="photoUpload" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm sm:text-base font-bold text-white tracking-wide leading-tight">Sorif Ahmmed</span>
+                                <span class="text-[10px] font-bold bg-indigo-500/25 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded-full">ID: 855</span>
+                            </div>
+                            <span class="text-xs font-medium text-indigo-300 leading-tight block mt-0.5">Junior Associate • HR & Admin</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ডান পাশ: In Time ও Out Time -->
+                <div class="flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-emerald-300">In</span>
+                        <input type="time" id="inTime" onchange="saveTimeData()" class="bg-slate-900/70 border border-white/15 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-none focus:border-emerald-400">
+                    </div>
+                    <span class="text-white/25">|</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-bold text-amber-300">Out</span>
+                        <input type="time" id="outTime" onchange="saveTimeData()" class="bg-slate-900/70 border border-white/15 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-none focus:border-amber-400">
+                    </div>
+                </div>
+            </div>
+
+            <!-- তারিখ ও কুইক অ্যাকশন বার -->
+            <div class="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-1.5 text-indigo-200 font-medium">
+                    <span>📅</span>
+                    <span id="banglaDateDisplay"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="navigateTo('closing-report')" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 font-semibold transition-colors">
+                        📋 রিপোর্ট দেখুন
+                    </button>
+                    <input type="date" id="datePicker" onchange="changeDate(this.value)" class="bg-white/10 border border-white/15 rounded-lg px-2.5 py-1 text-xs font-medium text-white focus:outline-none focus:border-indigo-400">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- মূল ওয়েব কন্টেইনার -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
+
+        <!-- ==================== হোম ড্যাশবোর্ড পেইজ ==================== -->
+        <section id="page-home" class="page-section active space-y-5">
+            <!-- ওয়েবসাইট ওভারভিউ ব্যানার ও লাইভ স্ট্যাটাস -->
+            <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 rounded-full mb-1.5">
+                        <span>🌐</span>
+                        <span>HR & Admin Daily Operations Portal</span>
+                    </div>
+                    <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">দৈনিক কাজের রিপোর্ট ও কার্যক্রম</h1>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-0.5">কর্মস্থল: HQ / TS • নির্ধারিত ডিউটি: সকাল ৯টা – রাত ৭টা</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                    <div class="bg-slate-50 border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-center">
+                        <div class="text-[11px] font-semibold text-slate-500">ডিউটি লোকেশন</div>
+                        <div id="heroDutyStatus" class="text-sm font-bold text-indigo-700 mt-0.5">নির্ধারিত নয়</div>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-center">
+                        <div class="text-[11px] font-semibold text-slate-500">বেসিক কাজ</div>
+                        <div id="heroBasicProgress" class="text-sm font-bold text-emerald-700 mt-0.5">০/২১</div>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-center">
+                        <div class="text-[11px] font-semibold text-slate-500">ডেস্ক ও চেয়ার</div>
+                        <div id="heroDeskProgress" class="text-sm font-bold text-sky-700 mt-0.5">০/৭৩</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between px-0.5">
+                <h2 class="text-base font-bold text-slate-800 tracking-tight">কাজের মেনু তালিকা</h2>
+                <span id="menuCountBadge" class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">১২টি সেকশন</span>
+            </div>
+
+            <div id="homeMenuGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+        </section>
+
+        <!-- ==================== ১. ব্যক্তিগত তথ্য পেইজ ==================== -->
+        <section id="page-personal-info" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">ব্যক্তিগত তথ্য</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 text-white flex items-center gap-4">
+                    <img id="infoPageAvatar" src="https://ui-avatars.com/api/?name=Sorif+Ahmmed&background=4f46e5&color=fff&size=128" alt="শরিফ আহম্মেদ" class="w-16 h-16 rounded-2xl object-cover ring-2 ring-indigo-400 shadow-md">
+                    <div>
+                        <h3 class="text-lg font-bold leading-snug">শরিফ আহম্মেদ</h3>
+                        <p class="text-xs text-indigo-300 font-medium">Junior associated • ID: 855</p>
+                        <span class="inline-block mt-1.5 text-[11px] font-semibold bg-white/15 px-2.5 py-0.5 rounded-full text-emerald-300">HR & Admin</span>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-slate-100 px-5">
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">কর্মীর নাম</span>
+                        <span class="text-sm font-bold text-slate-800 text-right">শরিফ আহম্মেদ</span>
+                    </div>
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">Employee ID</span>
+                        <span class="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-lg">855</span>
+                    </div>
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">পদবি</span>
+                        <span class="text-sm font-bold text-slate-800 text-right">Junior associated</span>
+                    </div>
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">বিভাগ</span>
+                        <span class="text-sm font-bold text-slate-800 text-right">HR & Admin</span>
+                    </div>
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">কর্মস্থল</span>
+                        <span class="text-sm font-bold text-slate-800 text-right">HQ / TS</span>
+                    </div>
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">যোগদানের তারিখ</span>
+                        <span class="text-sm font-bold text-slate-800 text-right">05-10-2026</span>
+                    </div>
+                    <div class="py-3.5 flex items-center justify-between gap-3">
+                        <span class="text-xs font-semibold text-slate-500">ডিউটির সময়</span>
+                        <span class="text-sm font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg text-right">সকাল ৯টা – রাত ৭টা</span>
+                    </div>
+
+                    <div class="py-3.5">
+                        <button type="button" onclick="navigateTo('emergency-contact')" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold text-sm flex items-center justify-between shadow-md transition-all">
+                            <span class="flex items-center gap-2.5">
+                                <span>🚨</span>
+                                <span>জরুরি যোগাযোগ</span>
+                            </span>
+                            <span class="text-base font-bold">›</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50/80 border-t border-slate-100">
+                    <button type="button" onclick="applyDefaultDutyShift()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-colors">
+                        ⏱️ আজকের In (০৯:০০) ও Out (১৯:০০) সময় সেট করুন
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== জরুরি যোগাযোগ পেইজ ==================== -->
+        <section id="page-emergency-contact" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('personal-info')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← ব্যক্তিগত তথ্য
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">জরুরি যোগাযোগ</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-3">
+                <div class="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-[11px] font-semibold text-slate-500">Contact Number</div>
+                        <div class="text-sm font-bold text-slate-800 mt-0.5">01858115480</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="copyText('01858115480')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                            কপি
+                        </button>
+                        <a href="tel:01858115480" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors">
+                            কল দিন
+                        </a>
+                    </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-[11px] font-semibold text-slate-500">WhatsApp</div>
+                        <div class="text-sm font-bold text-slate-800 mt-0.5">01858115490</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="copyText('01858115490')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                            কপি
+                        </button>
+                        <a href="https://wa.me/8801858115490" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition-colors">
+                            WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-[11px] font-semibold text-slate-500">Facebook</div>
+                        <div class="text-xs font-bold text-indigo-700 mt-0.5 break-all">https://www.facebook.com/amshorif.bhai</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="copyText('https://www.facebook.com/amshorif.bhai')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                            কপি
+                        </button>
+                        <a href="https://www.facebook.com/amshorif.bhai" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors">
+                            ওপেন
+                        </a>
+                    </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <div class="text-[11px] font-semibold text-slate-500">Instagram</div>
+                        <div class="text-sm font-bold text-slate-800 mt-0.5">amshorif.vai</div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="copyText('amshorif.vai')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors">
+                            কপি
+                        </button>
+                        <a href="https://www.instagram.com/amshorif.vai/" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-pink-600 to-purple-600 text-white text-xs font-bold transition-opacity hover:opacity-95">
+                            ওপেন
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ২. দৈনিক বেসিক কাজ পেইজ ==================== -->
+        <section id="page-basic-work" class="page-section">
+            <div class="flex items-center justify-between gap-2 mb-3.5">
+                <div class="flex items-center gap-2">
+                    <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ← হোম
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">দৈনিক বেসিক কাজ</h2>
+                </div>
+                <button type="button" onclick="resetBasicWorkToday()" class="text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-2 rounded-xl border border-rose-200 font-bold transition-colors">
+                    রিসেট
+                </button>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+                <div>
+                    <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">আজকের সম্পন্ন কাজের বিবরণ:</h3>
+                            <p class="text-[11px] text-slate-500 mt-0.5">কাজে টিক দিন এবং পাশের ঘরে শেষ করার সময় রাখুন</p>
+                        </div>
+                        <span id="basicWorkSummary" class="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 shrink-0">০/২১ সম্পন্ন</span>
+                    </div>
+
+                    <div id="basicWorkList" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-200">
+                    <h4 class="text-sm font-bold text-slate-800 mb-2">➕ অতিরিক্ত কাজ লিখুন:</h4>
+                    <div class="flex flex-col sm:flex-row gap-2 mb-3">
+                        <input type="text" id="extraBasicTaskInput" onkeydown="if(event.key==='Enter') addExtraBasicTask()" placeholder="অতিরিক্ত কাজের বিবরণ লিখুন..." class="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-indigo-500">
+                        <div class="flex items-center gap-1.5">
+                            <input type="time" id="extraBasicTaskTime" class="bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-500">
+                            <button type="button" onclick="document.getElementById('extraBasicTaskTime').value = getNowTimeHHMM()" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 transition-colors shrink-0">
+                                এখন
+                            </button>
+                            <button type="button" onclick="addExtraBasicTask()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-colors shrink-0">
+                                যুক্ত করুন
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="customBasicTaskList" class="space-y-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ৩. ডিউটি অবস্থান পেইজ ==================== -->
+        <section id="page-duty-location" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">ডিউটি অবস্থান</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5">
+                <p class="text-xs font-medium text-slate-500 mb-3.5">আজকের ডিউটি অবস্থান নির্বাচন করুন:</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="setDutyStatus('HQ')" id="duty-HQ" class="duty-btn py-4 rounded-xl border-2 border-slate-200 bg-white font-bold text-base text-slate-700 transition-all shadow-2xs">
+                        HQ
+                    </button>
+                    <button onclick="setDutyStatus('TS')" id="duty-TS" class="duty-btn py-4 rounded-xl border-2 border-slate-200 bg-white font-bold text-base text-slate-700 transition-all shadow-2xs">
+                        TS
+                    </button>
+                    <button onclick="setDutyStatus('HQ/TS')" id="duty-HQ/TS" class="duty-btn py-4 rounded-xl border-2 border-slate-200 bg-white font-bold text-base text-slate-700 transition-all shadow-2xs">
+                        HQ/TS
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ৪. ডেস্ক ও চেয়ার ক্লিন ==================== -->
+        <section id="page-desk-chair" class="page-section">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ← হোম
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">ডেস্ক ও চেয়ার ম্যাপ</h2>
+                </div>
+                <button onclick="resetDesksToday()" class="text-xs text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-2 rounded-xl border border-rose-200 font-bold transition-colors">
+                    রিসেট
+                </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-2.5 rounded-2xl shadow-sm text-center">
+                    <div class="text-[11px] text-slate-300">ডেস্ক ক্লিন</div>
+                    <div class="text-base font-bold text-sky-400"><span id="deskCount">0</span><span class="text-xs text-slate-400">/৭৩</span></div>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-950 to-indigo-900 text-white p-2.5 rounded-2xl shadow-sm text-center">
+                    <div class="text-[11px] text-indigo-200">চেয়ার ক্লিন</div>
+                    <div class="text-base font-bold text-amber-300"><span id="chairCount">0</span><span class="text-xs text-indigo-300">/৭৩</span></div>
+                </div>
+                <div class="bg-gradient-to-br from-emerald-900 to-teal-900 text-white p-2.5 rounded-2xl shadow-sm text-center">
+                    <div class="text-[11px] text-emerald-200">উভয় সম্পন্ন</div>
+                    <div class="text-base font-bold text-emerald-300"><span id="bothCount">0</span><span class="text-xs text-emerald-300">/৭৩</span></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-200/80 p-1 rounded-xl grid grid-cols-2 gap-1 mb-3">
+                <button id="tabMapBtn" onclick="switchDeskView('map')" class="py-2 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-2xs transition-all">
+                    🗺️ অফিস ফ্লোর ম্যাপ
+                </button>
+                <button id="tabListBtn" onclick="switchDeskView('list')" class="py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
+                    📋 তালিকা ভিউ (১-৭৩)
+                </button>
+            </div>
+
+            <div id="deskMapView" class="space-y-2.5">
+                <div class="bg-white px-3 py-2 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-white border border-slate-300 inline-block"></span> বাকি</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-sky-100 border-2 border-sky-500 inline-block"></span> শুধু ডেস্ক</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-amber-100 border-2 border-amber-500 inline-block"></span> শুধু চেয়ার</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-emerald-500 text-white inline-block"></span> উভয় সম্পন্ন</span>
+                </div>
+
+                <div class="bg-white rounded-2xl border-2 border-slate-300 p-2.5 shadow-md overflow-x-auto">
+                    <div class="min-w-[560px]">
+                        <div class="flex items-stretch justify-between gap-2">
+                            <div class="flex-1 flex flex-col justify-between gap-2">
+                                <div class="flex items-start gap-2.5">
+                                    <div class="flex flex-col gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-70-72"></div>
+                                    <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-64-69"></div>
+                                    <div class="flex flex-col gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300 ml-2" id="map-block-61-63"></div>
+                                </div>
+                                <div class="flex items-center justify-end gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300 self-end" id="map-block-52-60"></div>
+                            </div>
+
+                            <div class="w-16 bg-indigo-50 border-2 border-indigo-300 rounded-xl flex items-center justify-center p-1 shrink-0">
+                                <span class="vertical-text font-bold text-xs text-indigo-900 tracking-wider">Room-1</span>
+                            </div>
+                        </div>
+
+                        <div class="my-2.5 py-2 bg-gradient-to-r from-amber-50 via-slate-100 to-amber-50 border-y-2 border-dashed border-slate-300 rounded-lg text-center">
+                            <span class="text-xs font-bold text-slate-600 tracking-[0.25em]">═══ করিডোর (CORRIDOR) ═══</span>
+                        </div>
+
+                        <div class="flex items-stretch justify-between gap-2">
+                            <div class="flex-1 flex items-start justify-between gap-1.5">
+                                <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-1-10"></div>
+                                <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-11-20"></div>
+
+                                <div class="flex flex-col justify-between gap-2">
+                                    <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-21-26"></div>
+                                    <div class="bg-rose-50 border-2 border-rose-300 rounded-lg py-2.5 px-1 text-center">
+                                        <span class="text-[11px] font-bold text-rose-800">🚻 Washroom</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-27-31"></div>
+                                <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-32-41"></div>
+                                <div class="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-lg border border-slate-300" id="map-block-42-51"></div>
+                            </div>
+
+                            <div class="w-16 flex flex-col gap-1.5 shrink-0">
+                                <div class="flex-1 bg-sky-50 border-2 border-sky-300 rounded-xl flex items-center justify-center p-1">
+                                    <span class="vertical-text font-bold text-xs text-sky-900">Room-2</span>
+                                </div>
+                                <div class="flex-[1.3] bg-emerald-50 border-2 border-emerald-300 rounded-xl flex items-center justify-center p-1">
+                                    <span class="vertical-text font-bold text-xs text-emerald-900">Room-3</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 pt-2 border-t border-slate-200 flex items-center justify-between">
+                            <span class="text-[11px] text-slate-500">* যেকোনো ডেস্ক নম্বরে ট্যাপ করে ক্লিন মার্ক করুন</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[11px] font-semibold text-slate-600">অতিরিক্ত ডেস্ক:</span>
+                                <div id="map-block-73"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="deskListView" class="hidden">
+                <div class="flex gap-2 mb-3">
+                    <input type="number" id="deskSearch" oninput="renderDesks()" placeholder="ডেস্ক নং খুঁজুন (১-৭৩)..." class="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm shadow-2xs focus:outline-none focus:border-indigo-500">
+                    <select id="deskFilter" onchange="renderDesks()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 shadow-2xs focus:outline-none focus:border-indigo-500">
+                        <option value="all">সবগুলো (৭৩)</option>
+                        <option value="pending">বাকি আছে</option>
+                        <option value="done">সম্পন্ন হয়েছে</option>
+                    </select>
+                </div>
+                <div id="deskGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ৫. বিরতি সময় পেইজ ==================== -->
+        <section id="page-break-time" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">বিরতি সময়</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-4">
+                <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-semibold text-amber-100">আজকের মোট বিরতি</div>
+                        <div id="totalBreakDisplay" class="text-xl font-bold mt-0.5">০ মিনিট</div>
+                    </div>
+                    <span class="text-3xl">☕</span>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+                    <div class="text-xs font-bold text-slate-700">নতুন বিরতি যুক্ত করুন</div>
+                    <input type="text" id="breakReasonInput" placeholder="বিরতির কারণ (যেমন: লাঞ্চ ব্রেক, চা বিরতি)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-500 block mb-1">শুরু (From)</label>
+                            <input type="time" id="breakStartInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-500 block mb-1">শেষ (To)</label>
+                            <input type="time" id="breakEndInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addBreakEntry()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-sm transition-colors">
+                        + বিরতি যুক্ত করুন
+                    </button>
+                </div>
+
+                <div id="breakList" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ৬. হাজিরা ও সময়ের হিসাব পেইজ ==================== -->
+        <section id="page-attendance-time" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">হাজিরা ও সময়ের হিসাব</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
+                        <div class="text-[11px] font-semibold text-slate-500">In Time</div>
+                        <div id="attInDisplay" class="text-base font-bold text-emerald-700 mt-1">সেট হয়নি</div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
+                        <div class="text-[11px] font-semibold text-slate-500">Out Time</div>
+                        <div id="attOutDisplay" class="text-base font-bold text-amber-700 mt-1">সেট হয়নি</div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-slate-600">মোট উপস্থিতি সময়:</span>
+                        <span id="attGrossDuration" class="font-bold text-slate-800">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-slate-600">বিরতি বাদে কার্যকর সময়:</span>
+                        <span id="attNetDuration" class="font-bold text-indigo-700 text-sm">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-semibold text-slate-600">নির্ধারিত ডিউটি (১০ ঘণ্টা):</span>
+                        <span id="attShiftDiff" class="font-bold text-emerald-700">—</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="applyDefaultDutyShift(); renderAttendancePage();" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-colors">
+                    ⏱️ ডিফল্ট শিফট (০৯:০০ – ১৯:০০) সেট করুন
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== ৭. অফিস যাতায়াত পেইজ ==================== -->
+        <section id="page-office-commute" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">অফিস যাতায়াত</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+                    <div class="text-xs font-bold text-slate-700">যাতায়াতের তথ্য যুক্ত করুন</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="commuteFrom" placeholder="কোথা থেকে (যেমন: HQ)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold">
+                        <input type="text" id="commuteTo" placeholder="কোথায় (যেমন: TS)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="commuteMode" placeholder="মাধ্যম (যেমন: হাঁটা, রিকশা)" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold">
+                        <input type="time" id="commuteTime" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold">
+                    </div>
+                    <button type="button" onclick="addCommuteEntry()" class="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold transition-colors">
+                        + যাতায়াত লগ যুক্ত করুন
+                    </button>
+                </div>
+
+                <div id="commuteList" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ৮. অতিরিক্ত কাজ পেইজ ==================== -->
+        <section id="page-extra-work" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">অতিরিক্ত কাজ</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+                    <div class="text-xs font-bold text-slate-700">নতুন অতিরিক্ত কাজ যুক্ত করুন</div>
+                    <input type="text" id="extraPageTaskInput" onkeydown="if(event.key==='Enter') addExtraPageTask()" placeholder="কাজের বিবরণ লিখুন..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-500">
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="extraPageTaskTime" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold">
+                        <button type="button" onclick="document.getElementById('extraPageTaskTime').value = getNowTimeHHMM()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold">এখন</button>
+                        <button type="button" onclick="addExtraPageTask()" class="flex-1 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-colors">যুক্ত করুন</button>
+                    </div>
+                </div>
+
+                <div id="extraPageTaskList" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ৯. মালামাল ও রিফিল পেইজ ==================== -->
+        <section id="page-supplies-refill" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">মালামাল ও রিফিল</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-2.5">
+                <div class="text-xs font-semibold text-slate-500 mb-1">আজকের রিফিল বা সরবরাহকৃত মালামাল চেক করুন:</div>
+                <div id="suppliesChecklist" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ১০. কাজের সমাপ্তি রিপোর্ট পেইজ ==================== -->
+        <section id="page-closing-report" class="page-section">
+            <div class="flex items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                    <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ← হোম
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-800">কাজের সমাপ্তি রিপোর্ট</h2>
+                </div>
+                <button type="button" onclick="copyClosingReport()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm transition-colors">
+                    📋 রিপোর্ট কপি
+                </button>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4">
+                <pre id="closingReportText" class="whitespace-pre-wrap text-xs sm:text-sm font-medium text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-4 leading-relaxed font-sans"></pre>
+            </div>
+        </section>
+
+        <!-- ==================== ১১. বিশেষ নোট ও সমস্যা পেইজ ==================== -->
+        <section id="page-notes-issues" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">বিশেষ নোট ও সমস্যা</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-3">
+                <label class="text-xs font-bold text-slate-700 block">আজকের বিশেষ নোট, ঘাটতি বা সমস্যা লিখুন:</label>
+                <textarea id="dailyNotesTextarea" rows="5" oninput="saveDailyNotes(this.value)" placeholder="যেমন: ওয়াশরুমে হ্যান্ডওয়াশ স্টক কম, ৩ নম্বর রুমের এসি চেক করা দরকার..." class="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:border-orange-500"></textarea>
+                <div class="text-[11px] text-emerald-700 font-semibold">✓ স্বয়ংক্রিয়ভাবে সংরক্ষিত হচ্ছে</div>
+            </div>
+        </section>
+
+        <!-- ==================== ১২. কাজের প্রমাণ পেইজ ==================== -->
+        <section id="page-work-proof" class="page-section">
+            <div class="flex items-center gap-2.5 mb-4">
+                <button onclick="navigateTo('home')" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs">
+                    ← হোম
+                </button>
+                <h2 class="text-lg font-bold text-slate-800">কাজের প্রমাণ</h2>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-3.5 space-y-3">
+                    <div class="text-xs font-bold text-slate-700">নতুন কাজের ফটো ও বিবরণ যুক্ত করুন</div>
+
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-500 block mb-1">কাজের ছবি নির্বাচন করুন</label>
+                        <input type="file" id="proofPhotoInput" accept="image/*" class="w-full text-xs text-slate-700 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 bg-slate-50 border border-slate-200 rounded-xl p-1.5">
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-500 block mb-1">কী কাজ করেছেন তা লিখুন</label>
+                        <textarea id="proofWorkDescInput" rows="2" placeholder="যেমন: ওয়াশরুম ও বেসিন পরিষ্কার করা হয়েছে..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] font-semibold text-slate-500">সময়:</span>
+                            <input type="time" id="proofTimeInput" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold">
+                            <button type="button" onclick="document.getElementById('proofTimeInput').value = getNowTimeHHMM()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold">এখন</button>
+                        </div>
+                        <button type="button" onclick="addWorkProof()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-colors">
+                            + যুক্ত করুন
+                        </button>
+                    </div>
+                </div>
+
+                <div id="workProofList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ওয়েবসাইট ফুটার -->
+    <footer class="max-w-5xl mx-auto px-4 sm:px-6 mt-10 pt-5 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div>© <span id="footerYear"></span> Sorif Ahmmed (ID: 855) • HR & Admin Daily Work Portal</div>
+        <div>কর্মস্থল: HQ / TS</div>
+    </footer>
+
+    <!-- ম্যাপের ডেস্ক ক্লিক করলে পপআপ মোডাল -->
+    <div id="deskModalOverlay" onclick="closeDeskModal()" class="fixed inset-0 bg-slate-950/60 z-50 hidden backdrop-blur-xs flex items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-9 h-9 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm" id="modalDeskNum">#1</span>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">ডেস্ক নম্বর <span id="modalDeskTitle">1</span></h3>
+                        <p class="text-[11px] text-slate-500">ক্লিন স্ট্যাটাস নির্বাচন করুন</p>
+                    </div>
+                </div>
+                <button onclick="closeDeskModal()" class="text-slate-400 hover:text-slate-700 p-1 text-lg font-bold">✕</button>
+            </div>
+
+            <div class="space-y-2.5 my-4">
+                <button id="modalToggleDeskBtn" onclick="modalToggleAction('desk')" class="w-full py-3 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-between transition-all">
+                    <span>🖥️ ডেস্ক ক্লিন</span>
+                    <span id="modalDeskStatusText">বাকি</span>
+                </button>
+
+                <button id="modalToggleChairBtn" onclick="modalToggleAction('chair')" class="w-full py-3 px-4 rounded-xl border-2 font-bold text-sm flex items-center justify-between transition-all">
+                    <span>🪑 চেয়ার ক্লিন</span>
+                    <span id="modalChairStatusText">বাকি</span>
+                </button>
+            </div>
+
+            <button onclick="modalMarkBothDone()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm shadow-md hover:opacity-95 active:scale-[0.99] transition-all">
+                ✓ ডেস্ক ও চেয়ার উভয়ই সম্পন্ন
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const MENU_ITEMS = [
+            { id: 'personal-info', title: 'ব্যক্তিগত তথ্য', icon: '🪪', iconBg: 'bg-rose-50 text-rose-600' },
+            { id: 'basic-work', title: 'দৈনিক বেসিক কাজ', icon: '🧹', iconBg: 'bg-emerald-50 text-emerald-600' },
+            { id: 'duty-location', title: 'ডিউটি অবস্থান', icon: '📍', iconBg: 'bg-indigo-50 text-indigo-600' },
+            { id: 'desk-chair', title: 'ডেস্ক ও চেয়ার ক্লিন', icon: '🪑', iconBg: 'bg-sky-50 text-sky-600' },
+            { id: 'break-time', title: 'বিরতি সময়', icon: '☕', iconBg: 'bg-amber-50 text-amber-600' },
+            { id: 'attendance-time', title: 'হাজিরা ও সময়ের হিসাব', icon: '⏱️', iconBg: 'bg-violet-50 text-violet-600' },
+            { id: 'office-commute', title: 'অফিস যাতায়াত', icon: '🚌', iconBg: 'bg-cyan-50 text-cyan-600' },
+            { id: 'extra-work', title: 'অতিরিক্ত কাজ', icon: '✨', iconBg: 'bg-purple-50 text-purple-600' },
+            { id: 'supplies-refill', title: 'মালামাল ও রিফিল', icon: '🧴', iconBg: 'bg-teal-50 text-teal-600' },
+            { id: 'closing-report', title: 'কাজের সমাপ্তি রিপোর্ট', icon: '📋', iconBg: 'bg-blue-50 text-blue-600' },
+            { id: 'notes-issues', title: 'বিশেষ নোট ও সমস্যা', icon: '⚠️', iconBg: 'bg-orange-50 text-orange-600' },
+            { id: 'work-proof', title: 'কাজের প্রমাণ', icon: '📸', iconBg: 'bg-emerald-50 text-emerald-700' }
+        ];
+
+        const BASIC_TASKS = [
+            { id: 'glass_door', text: 'গ্লাস ডোর পরিষ্কার করা হয়েছে' },
+            { id: 'water_bottles', text: 'পানির বোতলগুলোতে পানি ভরা হয়েছে' },
+            { id: 'floor_sweep', text: 'ফ্লোর ঝাড়ু দেওয়া হয়েছে' },
+            { id: 'floor_mop', text: 'ফ্লোর মোছা হয়েছে' },
+            { id: 'manager_room', text: 'ম্যানেজার ভাইয়ের রুম পরিষ্কার করা হয়েছে' },
+            { id: 'water_plants', text: 'গাছে পানি দেওয়া হয়েছে' },
+            { id: 'dustbins_clean', text: 'সকল ডাস্টবিনের ময়লা পরিষ্কার করা হয়েছে' },
+            { id: 'washroom_clean', text: 'ওয়াশরুম পরিষ্কার করা হয়েছে' },
+            { id: 'washroom_basin', text: 'ওয়াশরুমের বেসিন পরিষ্কার করা হয়েছে' },
+            { id: 'washroom_mirror', text: 'ওয়াশরুমের আয়না পরিষ্কার করা হয়েছে' },
+            { id: 'handwash_tissue', text: 'হ্যান্ডওয়াশ ও টিস্যু রিফিল করা হয়েছে' },
+            { id: 'monitor_cpu', text: 'মনিটর ও সিপিইউ পরিষ্কার করা হয়েছে' },
+            { id: 'office_desks', text: 'অফিসের ডেস্কগুলো পরিষ্কার করা হয়েছে' },
+            { id: 'chairs_clean', text: 'চেয়ারগুলো পরিষ্কার করা হয়েছে' },
+            { id: 'meeting_sweep', text: 'মিটিং রুম ঝাড়ু দেওয়া হয়েছে' },
+            { id: 'meeting_mop', text: 'মিটিং রুমের ফ্লোর মোছা হয়েছে' },
+            { id: 'microwave_clean', text: 'মাইক্রোওয়েভ পরিষ্কার করা হয়েছে' },
+            { id: 'kitchen_desk', text: 'কিচেনের ডেস্ক পরিষ্কার করা হয়েছে' },
+            { id: 'kitchen_basin', text: 'কিচেনের বেসিন পরিষ্কার করা হয়েছে' },
+            { id: 'cobwebs_clean', text: 'মাকড়সার জাল পরিষ্কার করা হয়েছে' },
+            { id: 'tea_cups_clean', text: 'ব্যবহৃত চায়ের কাপগুলো পরিষ্কার করা হয়েছে' }
+        ];
+
+        const SUPPLY_ITEMS = [
+            { id: 'handwash', label: 'হ্যান্ডওয়াশ রিফিল' },
+            { id: 'tissue_roll', label: 'টিস্যু রোল / বক্স টিস্যু' },
+            { id: 'drinking_water', label: 'খাবার পানির জার / বোতল' },
+            { id: 'dishwash_liquid', label: 'ডিশওয়াশ লিকুইড' },
+            { id: 'trash_bag', label: 'ডাস্টবিন ব্যাগ' },
+            { id: 'glass_cleaner', label: 'গ্লাস ও ফ্লোর ক্লিনার' }
+        ];
+
+        const TOTAL_DESKS = 73;
+        let currentDate = new Date().toISOString().split('T')[0];
+        let activeModalDesk = null;
+        let currentDeskView = 'map';
+
+        function copyText(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+            const toast = document.getElementById('copyToast');
+            toast.innerText = `✓ কপি হয়েছে`;
+            toast.classList.remove('hidden');
+            clearTimeout(window.copyToastTimer);
+            window.copyToastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 1800);
+        }
+
+        function getDayData(dateStr) {
+            const raw = localStorage.getItem('sorif_report_' + dateStr);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                return {
+                    inTime: parsed.inTime || '',
+                    outTime: parsed.outTime || '',
+                    dutyStatus: parsed.dutyStatus || '',
+                    basicTasks: parsed.basicTasks || {},
+                    extraBasicTasks: Array.isArray(parsed.extraBasicTasks) ? parsed.extraBasicTasks : [],
+                    desks: parsed.desks || {},
+                    breaks: Array.isArray(parsed.breaks) ? parsed.breaks : [],
+                    commutes: Array.isArray(parsed.commutes) ? parsed.commutes : [],
+                    supplies: parsed.supplies || {},
+                    notes: parsed.notes || '',
+                    proofs: Array.isArray(parsed.proofs) ? parsed.proofs : []
+                };
+            }
+            return {
+                inTime: '',
+                outTime: '',
+                dutyStatus: '',
+                basicTasks: {},
+                extraBasicTasks: [],
+                desks: {},
+                breaks: [],
+                commutes: [],
+                supplies: {},
+                notes: '',
+                proofs: []
+            };
+        }
+
+        function saveDayData(dateStr, data) {
+            try {
+                localStorage.setItem('sorif_report_' + dateStr, JSON.stringify(data));
+            } catch (e) {
+                copyText('স্টোরেজ সীমা পূর্ণ - ছোট ছবি ব্যবহার করুন');
+            }
+            updateHomeBadges();
+        }
+
+        function formatBanglaDate(dateStr) {
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            return dateObj.toLocaleDateString('bn-BD', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function getNowTimeHHMM() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        function timeToMinutes(hhmm) {
+            if (!hhmm || !hhmm.includes(':')) return null;
+            const [h, m] = hhmm.split(':').map(Number);
+            if (isNaN(h) || isNaN(m)) return null;
+            return h * 60 + m;
+        }
+
+        function formatMinutesToHM(totalMins) {
+            const absMins = Math.max(0, Math.round(totalMins));
+            const h = Math.floor(absMins / 60);
+            const m = absMins % 60;
+            if (h > 0 && m > 0) return `${h} ঘণ্টা ${m} মিনিট`;
+            if (h > 0) return `${h} ঘণ্টা`;
+            return `${m} মিনিট`;
+        }
+
+        function navigateTo(pageId, title = '', icon = '') {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+
+            if (pageId === 'home') {
+                document.getElementById('page-home').classList.add('active');
+                updateHomeBadges();
+            } else if (pageId === 'personal-info') {
+                document.getElementById('page-personal-info').classList.add('active');
+            } else if (pageId === 'emergency-contact') {
+                document.getElementById('page-emergency-contact').classList.add('active');
+            } else if (pageId === 'basic-work') {
+                document.getElementById('page-basic-work').classList.add('active');
+                renderBasicWork();
+            } else if (pageId === 'duty-location') {
+                document.getElementById('page-duty-location').classList.add('active');
+            } else if (pageId === 'desk-chair') {
+                document.getElementById('page-desk-chair').classList.add('active');
+                renderDesks();
+            } else if (pageId === 'break-time') {
+                document.getElementById('page-break-time').classList.add('active');
+                renderBreakPage();
+            } else if (pageId === 'attendance-time') {
+                document.getElementById('page-attendance-time').classList.add('active');
+                renderAttendancePage();
+            } else if (pageId === 'office-commute') {
+                document.getElementById('page-office-commute').classList.add('active');
+                renderCommutePage();
+            } else if (pageId === 'extra-work') {
+                document.getElementById('page-extra-work').classList.add('active');
+                renderExtraWorkPage();
+            } else if (pageId === 'supplies-refill') {
+                document.getElementById('page-supplies-refill').classList.add('active');
+                renderSuppliesPage();
+            } else if (pageId === 'closing-report') {
+                document.getElementById('page-closing-report').classList.add('active');
+                renderClosingReport();
+            } else if (pageId === 'notes-issues') {
+                document.getElementById('page-notes-issues').classList.add('active');
+                renderNotesPage();
+            } else if (pageId === 'work-proof') {
+                document.getElementById('page-work-proof').classList.add('active');
+                renderWorkProofPage();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgData = e.target.result;
+                localStorage.setItem('sorif_profile_photo', imgData);
+                document.getElementById('headerAvatar').src = imgData;
+                document.getElementById('sidebarAvatar').src = imgData;
+                document.getElementById('infoPageAvatar').src = imgData;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadProfilePhoto() {
+            const savedPhoto = localStorage.getItem('sorif_profile_photo');
+            if (savedPhoto) {
+                document.getElementById('headerAvatar').src = savedPhoto;
+                document.getElementById('sidebarAvatar').src = savedPhoto;
+                document.getElementById('infoPageAvatar').src = savedPhoto;
+            }
+        }
+
+        function applyDefaultDutyShift() {
+            document.getElementById('inTime').value = '09:00';
+            document.getElementById('outTime').value = '19:00';
+            saveTimeData();
+            copyText('09:00 – 19:00 সেট হয়েছে');
+        }
+
+        function renderWorkProofPage() {
+            const data = getDayData(currentDate);
+            const listEl = document.getElementById('workProofList');
+            listEl.innerHTML = '';
+
+            if (!data.proofs.length) {
+                listEl.innerHTML = '<div class="col-span-full text-center text-xs text-slate-400 py-6">আজকের কাজের কোনো প্রমাণ ফটো যুক্ত করা হয়নি</div>';
+                return;
+            }
+
+            data.proofs.forEach((p, idx) => {
+                const card = document.createElement('div');
+                card.className = 'rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-2xs';
+                card.innerHTML = `
+                    <img src="${p.photo}" alt="কাজের প্রমাণ" class="w-full h-52 object-cover bg-slate-100">
+                    <div class="p-3.5 flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-emerald-700">${p.time || getNowTimeHHMM()}</div>
+                            <p class="text-sm font-bold text-slate-800 mt-1 break-words">${p.description}</p>
+                        </div>
+                        <button type="button" onclick="deleteWorkProof(${idx})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold shrink-0">✕</button>
+                    </div>
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function addWorkProof() {
+            const fileInput = document.getElementById('proofPhotoInput');
+            const descInput = document.getElementById('proofWorkDescInput');
+            const timeInput = document.getElementById('proofTimeInput');
+
+            const file = fileInput.files && fileInput.files[0];
+            const description = descInput.value.trim();
+            const timeVal = timeInput.value || getNowTimeHHMM();
+
+            if (!file && !description) return;
+
+            const saveEntry = (imgSrc) => {
+                const data = getDayData(currentDate);
+                data.proofs.unshift({
+                    photo: imgSrc || 'https://ui-avatars.com/api/?name=Work+Proof&background=ecfdf5&color=047857&size=256',
+                    description: description || 'কাজ সম্পন্ন হয়েছে',
+                    time: timeVal
+                });
+                saveDayData(currentDate, data);
+
+                fileInput.value = '';
+                descInput.value = '';
+                timeInput.value = '';
+                renderWorkProofPage();
+            };
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    saveEntry(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                saveEntry('');
+            }
+        }
+
+        function deleteWorkProof(index) {
+            const data = getDayData(currentDate);
+            data.proofs.splice(index, 1);
+            saveDayData(currentDate, data);
+            renderWorkProofPage();
+        }
+
+        function renderBasicWork() {
+            const data = getDayData(currentDate);
+            const listEl = document.getElementById('basicWorkList');
+            listEl.innerHTML = '';
+
+            let doneCount = 0;
+
+            BASIC_TASKS.forEach((task, idx) => {
+                const entry = data.basicTasks[task.id] || { done: false, time: '' };
+                if (entry.done) doneCount++;
+
+                const row = document.createElement('div');
+                row.className = `p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${entry.done ? 'bg-emerald-50/60 border-emerald-300' : 'bg-white border-slate-200'}`;
+                row.innerHTML = `
+                    <label class="flex items-start sm:items-center gap-3 cursor-pointer flex-1 min-w-0">
+                        <input type="checkbox" ${entry.done ? 'checked' : ''} onchange="toggleBasicTask('${task.id}', this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 accent-emerald-600 rounded cursor-pointer shrink-0">
+                        <span class="text-sm font-bold leading-snug ${entry.done ? 'text-slate-800' : 'text-slate-700'}">
+                            <span class="text-indigo-600 mr-1">${idx + 1}.</span>${task.text}
+                        </span>
+                    </label>
+                    <div class="flex items-center gap-1.5 pl-8 sm:pl-0 shrink-0">
+                        <input type="time" value="${entry.time || ''}" onchange="setBasicTaskTime('${task.id}', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-500">
+                        <button type="button" onclick="setBasicTaskNow('${task.id}')" title="বর্তমান সময় বসান" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold border border-indigo-200 transition-colors">
+                            এখন
+                        </button>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+
+            const customListEl = document.getElementById('customBasicTaskList');
+            customListEl.innerHTML = '';
+
+            data.extraBasicTasks.forEach((item, idx) => {
+                if (item.done) doneCount++;
+                const row = document.createElement('div');
+                row.className = `p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${item.done ? 'bg-violet-50/70 border-violet-300' : 'bg-white border-slate-200'}`;
+                row.innerHTML = `
+                    <label class="flex items-start sm:items-center gap-3 cursor-pointer flex-1 min-w-0">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleExtraBasicTask(${idx}, this.checked)" class="w-5 h-5 mt-0.5 sm:mt-0 accent-violet-600 rounded cursor-pointer shrink-0">
+                        <span class="text-sm font-bold leading-snug text-slate-800 break-words">
+                            <span class="text-violet-600 mr-1">অতিরিক্ত ${idx + 1}.</span>${item.text}
+                        </span>
+                    </label>
+                    <div class="flex items-center gap-1.5 pl-8 sm:pl-0 shrink-0">
+                        <input type="time" value="${item.time || ''}" onchange="setExtraBasicTaskTime(${idx}, this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:border-violet-500">
+                        <button type="button" onclick="deleteExtraBasicTask(${idx})" title="মুছুন" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold border border-rose-200 transition-colors">
+                            ✕
+                        </button>
+                    </div>
+                `;
+                customListEl.appendChild(row);
+            });
+
+            const totalCount = BASIC_TASKS.length + data.extraBasicTasks.length;
+            const summaryEl = document.getElementById('basicWorkSummary');
+            if (summaryEl) {
+                summaryEl.innerText = `${doneCount}/${totalCount} সম্পন্ন`;
+                summaryEl.className = `text-xs font-bold px-2.5 py-1 rounded-full shrink-0 border ${totalCount > 0 && doneCount === totalCount ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-indigo-50 text-indigo-700 border-indigo-100'}`;
+            }
+        }
+
+        function addExtraBasicTask() {
+            const inputEl = document.getElementById('extraBasicTaskInput');
+            const timeEl = document.getElementById('extraBasicTaskTime');
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            const data = getDayData(currentDate);
+            const timeVal = timeEl.value || getNowTimeHHMM();
+            data.extraBasicTasks.push({
+                text,
+                time: timeVal,
+                done: true
+            });
+            saveDayData(currentDate, data);
+
+            inputEl.value = '';
+            timeEl.value = '';
+            renderBasicWork();
+        }
+
+        function toggleExtraBasicTask(index, isChecked) {
+            const data = getDayData(currentDate);
+            if (!data.extraBasicTasks[index]) return;
+            data.extraBasicTasks[index].done = isChecked;
+            if (isChecked && !data.extraBasicTasks[index].time) {
+                data.extraBasicTasks[index].time = getNowTimeHHMM();
+            }
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function setExtraBasicTaskTime(index, timeVal) {
+            const data = getDayData(currentDate);
+            if (!data.extraBasicTasks[index]) return;
+            data.extraBasicTasks[index].time = timeVal;
+            if (timeVal) data.extraBasicTasks[index].done = true;
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function deleteExtraBasicTask(index) {
+            const data = getDayData(currentDate);
+            data.extraBasicTasks.splice(index, 1);
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function toggleBasicTask(taskId, isChecked) {
+            const data = getDayData(currentDate);
+            const current = data.basicTasks[taskId] || { done: false, time: '' };
+            current.done = isChecked;
+            if (isChecked && !current.time) {
+                current.time = getNowTimeHHMM();
+            }
+            data.basicTasks[taskId] = current;
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function setBasicTaskTime(taskId, timeVal) {
+            const data = getDayData(currentDate);
+            const current = data.basicTasks[taskId] || { done: false, time: '' };
+            current.time = timeVal;
+            if (timeVal) current.done = true;
+            data.basicTasks[taskId] = current;
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function setBasicTaskNow(taskId) {
+            const data = getDayData(currentDate);
+            const current = data.basicTasks[taskId] || { done: false, time: '' };
+            current.done = true;
+            current.time = getNowTimeHHMM();
+            data.basicTasks[taskId] = current;
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function resetBasicWorkToday() {
+            if (!confirm('আজকের দৈনিক বেসিক কাজের সব টিক, সময় ও অতিরিক্ত কাজ রিসেট করতে চান?')) return;
+            const data = getDayData(currentDate);
+            data.basicTasks = {};
+            data.extraBasicTasks = [];
+            saveDayData(currentDate, data);
+            renderBasicWork();
+        }
+
+        function getTotalBreakMinutes(data) {
+            let total = 0;
+            (data.breaks || []).forEach(b => {
+                const s = timeToMinutes(b.start);
+                const e = timeToMinutes(b.end);
+                if (s !== null && e !== null && e > s) {
+                    total += (e - s);
+                }
+            });
+            return total;
+        }
+
+        function renderBreakPage() {
+            const data = getDayData(currentDate);
+            const totalMins = getTotalBreakMinutes(data);
+            document.getElementById('totalBreakDisplay').innerText = formatMinutesToHM(totalMins);
+
+            const listEl = document.getElementById('breakList');
+            listEl.innerHTML = '';
+
+            if (!data.breaks.length) {
+                listEl.innerHTML = '<div class="text-center text-xs text-slate-400 py-4">আজ কোনো বিরতি যুক্ত করা হয়নি</div>';
+                return;
+            }
+
+            data.breaks.forEach((b, idx) => {
+                const s = timeToMinutes(b.start);
+                const e = timeToMinutes(b.end);
+                const diff = (s !== null && e !== null && e > s) ? `${e - s} মিনিট` : '';
+                const row = document.createElement('div');
+                row.className = 'p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2';
+                row.innerHTML = `
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">${b.reason || 'বিরতি'}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">${b.start || '--:--'} – ${b.end || '--:--'} ${diff ? `<span class="text-amber-700 font-bold">(${diff})</span>` : ''}</div>
+                    </div>
+                    <button type="button" onclick="deleteBreakEntry(${idx})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold">✕</button>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function addBreakEntry() {
+            const reason = document.getElementById('breakReasonInput').value.trim();
+            const start = document.getElementById('breakStartInput').value;
+            const end = document.getElementById('breakEndInput').value;
+            if (!start && !end && !reason) return;
+
+            const data = getDayData(currentDate);
+            data.breaks.push({ reason, start, end });
+            saveDayData(currentDate, data);
+
+            document.getElementById('breakReasonInput').value = '';
+            document.getElementById('breakStartInput').value = '';
+            document.getElementById('breakEndInput').value = '';
+            renderBreakPage();
+        }
+
+        function deleteBreakEntry(index) {
+            const data = getDayData(currentDate);
+            data.breaks.splice(index, 1);
+            saveDayData(currentDate, data);
+            renderBreakPage();
+        }
+
+        function renderAttendancePage() {
+            const data = getDayData(currentDate);
+            document.getElementById('attInDisplay').innerText = data.inTime || 'সেট হয়নি';
+            document.getElementById('attOutDisplay').innerText = data.outTime || 'সেট হয়নি';
+
+            const inMins = timeToMinutes(data.inTime);
+            const outMins = timeToMinutes(data.outTime);
+            const breakMins = getTotalBreakMinutes(data);
+
+            if (inMins !== null && outMins !== null && outMins > inMins) {
+                const gross = outMins - inMins;
+                const net = Math.max(0, gross - breakMins);
+                const standardShift = 10 * 60;
+                const diff = net - standardShift;
+
+                document.getElementById('attGrossDuration').innerText = formatMinutesToHM(gross);
+                document.getElementById('attNetDuration').innerText = `${formatMinutesToHM(net)} (বিরতি ${breakMins} মি. বাদ)`;
+                document.getElementById('attShiftDiff').innerText = diff >= 0
+                    ? `+${formatMinutesToHM(diff)} অতিরিক্ত`
+                    : `${formatMinutesToHM(Math.abs(diff))} বাকি`;
+            } else {
+                document.getElementById('attGrossDuration').innerText = '—';
+                document.getElementById('attNetDuration').innerText = '—';
+                document.getElementById('attShiftDiff').innerText = '—';
+            }
+        }
+
+        function renderCommutePage() {
+            const data = getDayData(currentDate);
+            const listEl = document.getElementById('commuteList');
+            listEl.innerHTML = '';
+
+            if (!data.commutes.length) {
+                listEl.innerHTML = '<div class="text-center text-xs text-slate-400 py-4">আজকের যাতায়াতের কোনো লগ নেই</div>';
+                return;
+            }
+
+            data.commutes.forEach((c, idx) => {
+                const row = document.createElement('div');
+                row.className = 'p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2';
+                row.innerHTML = `
+                    <div>
+                        <div class="text-sm font-bold text-slate-800">${c.from || '—'} → ${c.to || '—'}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">${c.mode || 'মাধ্যম উল্লেখ নেই'} • ${c.time || 'সময় নেই'}</div>
+                    </div>
+                    <button type="button" onclick="deleteCommuteEntry(${idx})" class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold">✕</button>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function addCommuteEntry() {
+            const from = document.getElementById('commuteFrom').value.trim();
+            const to = document.getElementById('commuteTo').value.trim();
+            const mode = document.getElementById('commuteMode').value.trim();
+            const time = document.getElementById('commuteTime').value;
+            if (!from && !to && !mode) return;
+
+            const data = getDayData(currentDate);
+            data.commutes.push({ from, to, mode, time });
+            saveDayData(currentDate, data);
+
+            document.getElementById('commuteFrom').value = '';
+            document.getElementById('commuteTo').value = '';
+            document.getElementById('commuteMode').value = '';
+            document.getElementById('commuteTime').value = '';
+            renderCommutePage();
+        }
+
+        function deleteCommuteEntry(index) {
+            const data = getDayData(currentDate);
+            data.commutes.splice(index, 1);
+            saveDayData(currentDate, data);
+            renderCommutePage();
+        }
+
+        function renderExtraWorkPage() {
+            const data = getDayData(currentDate);
+            const listEl = document.getElementById('extraPageTaskList');
+            listEl.innerHTML = '';
+
+            if (!data.extraBasicTasks.length) {
+                listEl.innerHTML = '<div class="text-center text-xs text-slate-400 py-4">আজ কোনো অতিরিক্ত কাজ যুক্ত করা হয়নি</div>';
+                return;
+            }
+
+            data.extraBasicTasks.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'p-3 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-2';
+                row.innerHTML = `
+                    <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleExtraBasicTask(${idx}, this.checked); renderExtraWorkPage();" class="w-4 h-4 accent-purple-600 rounded">
+                        <span class="text-sm font-bold text-slate-800 break-words">${item.text}</span>
+                    </label>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">${item.time || '--:--'}</span>
+                        <button type="button" onclick="deleteExtraBasicTask(${idx}); renderExtraWorkPage();" class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold">✕</button>
+                    </div>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function addExtraPageTask() {
+            const inputEl = document.getElementById('extraPageTaskInput');
+            const timeEl = document.getElementById('extraPageTaskTime');
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            const data = getDayData(currentDate);
+            data.extraBasicTasks.push({
+                text,
+                time: timeEl.value || getNowTimeHHMM(),
+                done: true
+            });
+            saveDayData(currentDate, data);
+            inputEl.value = '';
+            timeEl.value = '';
+            renderExtraWorkPage();
+        }
+
+        function renderSuppliesPage() {
+            const data = getDayData(currentDate);
+            const listEl = document.getElementById('suppliesChecklist');
+            listEl.innerHTML = '';
+
+            SUPPLY_ITEMS.forEach(item => {
+                const checked = !!data.supplies[item.id];
+                const row = document.createElement('label');
+                row.className = `p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${checked ? 'bg-teal-50/70 border-teal-300' : 'bg-white border-slate-200'}`;
+                row.innerHTML = `
+                    <span class="flex items-center gap-3">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleSupplyItem('${item.id}', this.checked)" class="w-5 h-5 accent-teal-600 rounded">
+                        <span class="text-sm font-bold text-slate-800">${item.label}</span>
+                    </span>
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${checked ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-slate-500'}">${checked ? 'রিফিল সম্পন্ন' : 'বাকি'}</span>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function toggleSupplyItem(id, checked) {
+            const data = getDayData(currentDate);
+            data.supplies[id] = checked;
+            saveDayData(currentDate, data);
+            renderSuppliesPage();
+        }
+
+        function renderNotesPage() {
+            const data = getDayData(currentDate);
+            document.getElementById('dailyNotesTextarea').value = data.notes || '';
+        }
+
+        function saveDailyNotes(val) {
+            const data = getDayData(currentDate);
+            data.notes = val;
+            saveDayData(currentDate, data);
+        }
+
+        function renderClosingReport() {
+            const data = getDayData(currentDate);
+            let doneBasic = 0;
+            const completedLines = [];
+
+            BASIC_TASKS.forEach((task, idx) => {
+                const entry = data.basicTasks[task.id];
+                if (entry && entry.done) {
+                    doneBasic++;
+                    completedLines.push(`${idx + 1}. ${task.text}${entry.time ? ` (${entry.time})` : ''}`);
+                }
+            });
+
+            data.extraBasicTasks.forEach((item, idx) => {
+                if (item.done) {
+                    completedLines.push(`অতিরিক্ত ${idx + 1}. ${item.text}${item.time ? ` (${item.time})` : ''}`);
+                }
+            });
+
+            let bothDeskDone = 0;
+            for (let i = 1; i <= TOTAL_DESKS; i++) {
+                const st = data.desks[i] || { desk: false, chair: false };
+                if (st.desk && st.chair) bothDeskDone++;
+            }
+
+            const breakMins = getTotalBreakMinutes(data);
+            const lines = [
+                `কর্মী: Sorif Ahmmed (ID: 855)`,
+                `তারিখ: ${formatBanglaDate(currentDate)}`,
+                `ডিউটি অবস্থান: ${data.dutyStatus || 'উল্লেখ নেই'}`,
+                `In: ${data.inTime || '--:--'} | Out: ${data.outTime || '--:--'}`,
+                `মোট বিরতি: ${formatMinutesToHM(breakMins)}`,
+                `ডেস্ক ও চেয়ার ক্লিন: ${bothDeskDone}/${TOTAL_DESKS} সম্পন্ন`,
+                `বেসিক কাজ: ${doneBasic}/${BASIC_TASKS.length} সম্পন্ন`,
+                `কাজের প্রমাণ ফটো: ${data.proofs.length}টি`,
+                ``,
+                `আজকের সম্পন্ন কাজের বিবরণ:`,
+                completedLines.length ? completedLines.join('\n') : 'কোনো কাজ সম্পন্ন মার্ক করা হয়নি'
+            ];
+
+            if (data.notes && data.notes.trim()) {
+                lines.push(``, `বিশেষ নোট: ${data.notes.trim()}`);
+            }
+
+            document.getElementById('closingReportText').innerText = lines.join('\n');
+        }
+
+        function copyClosingReport() {
+            const text = document.getElementById('closingReportText').innerText;
+            copyText(text);
+        }
+
+        function renderMenus() {
+            const homeGrid = document.getElementById('homeMenuGrid');
+            const sideLinks = document.getElementById('sidebarMenuLinks');
+            const badge = document.getElementById('menuCountBadge');
+            if (badge) badge.innerText = `${MENU_ITEMS.length}টি সেকশন`;
+
+            homeGrid.innerHTML = '';
+            sideLinks.innerHTML = '';
+
+            MENU_ITEMS.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => navigateTo(item.id, item.title, item.icon);
+                btn.className = "menu-card w-full rounded-2xl px-4 py-3.5 flex items-center justify-between text-left group";
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3.5">
+                        <span class="w-10 h-10 rounded-xl ${item.iconBg} flex items-center justify-center text-lg shadow-2xs transition-transform group-hover:scale-105">${item.icon}</span>
+                        <div>
+                            <div class="font-bold text-slate-800 text-[15px] group-hover:text-indigo-700 transition-colors">${index + 1}. ${item.title}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="badge-${item.id}" class="text-xs font-bold px-2.5 py-0.5 rounded-full hidden"></span>
+                        <span class="w-6 h-6 rounded-full bg-slate-50 group-hover:bg-indigo-50 text-slate-400 group-hover:text-indigo-600 flex items-center justify-center text-sm font-bold transition-colors">›</span>
+                    </div>
+                `;
+                homeGrid.appendChild(btn);
+
+                const sideBtn = document.createElement('button');
+                sideBtn.onclick = () => {
+                    navigateTo(item.id, item.title, item.icon);
+                    toggleSidebar();
+                };
+                sideBtn.className = "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors";
+                sideBtn.innerHTML = `<span>${item.icon}</span><span>${index + 1}. ${item.title}</span>`;
+                sideLinks.appendChild(sideBtn);
+            });
+
+            updateHomeBadges();
+        }
+
+        function updateHomeBadges() {
+            const data = getDayData(currentDate);
+
+            let doneBasicCount = 0;
+            BASIC_TASKS.forEach(t => {
+                if (data.basicTasks[t.id] && data.basicTasks[t.id].done) doneBasicCount++;
+            });
+            data.extraBasicTasks.forEach(item => {
+                if (item.done) doneBasicCount++;
+            });
+            const totalBasicCount = BASIC_TASKS.length + data.extraBasicTasks.length;
+
+            let bothDeskDone = 0;
+            for (let i = 1; i <= TOTAL_DESKS; i++) {
+                const st = data.desks[i] || { desk: false, chair: false };
+                if (st.desk && st.chair) bothDeskDone++;
+            }
+
+            const heroDuty = document.getElementById('heroDutyStatus');
+            if (heroDuty) heroDuty.innerText = data.dutyStatus || 'নির্ধারিত নয়';
+
+            const heroBasic = document.getElementById('heroBasicProgress');
+            if (heroBasic) heroBasic.innerText = `${doneBasicCount}/${totalBasicCount}`;
+
+            const heroDesk = document.getElementById('heroDeskProgress');
+            if (heroDesk) heroDesk.innerText = `${bothDeskDone}/${TOTAL_DESKS}`;
+
+            const personalBadge = document.getElementById('badge-personal-info');
+            if (personalBadge) {
+                personalBadge.classList.remove('hidden');
+                personalBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700";
+                personalBadge.innerText = "ID: 855";
+            }
+
+            const basicBadge = document.getElementById('badge-basic-work');
+            if (basicBadge) {
+                basicBadge.classList.remove('hidden');
+                basicBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${totalBasicCount > 0 && doneBasicCount === totalBasicCount ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`;
+                basicBadge.innerText = `${doneBasicCount}/${totalBasicCount}`;
+            }
+
+            const dutyBadge = document.getElementById('badge-duty-location');
+            if (dutyBadge) {
+                if (data.dutyStatus) {
+                    dutyBadge.classList.remove('hidden');
+                    dutyBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700";
+                    dutyBadge.innerText = data.dutyStatus;
+                } else {
+                    dutyBadge.classList.add('hidden');
+                }
+            }
+
+            const deskBadge = document.getElementById('badge-desk-chair');
+            if (deskBadge) {
+                deskBadge.classList.remove('hidden');
+                deskBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full ${bothDeskDone === TOTAL_DESKS ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700'}`;
+                deskBadge.innerText = `${bothDeskDone}/${TOTAL_DESKS}`;
+            }
+
+            const breakBadge = document.getElementById('badge-break-time');
+            if (breakBadge) {
+                const bMins = getTotalBreakMinutes(data);
+                if (bMins > 0) {
+                    breakBadge.classList.remove('hidden');
+                    breakBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800";
+                    breakBadge.innerText = `${bMins} মি.`;
+                } else {
+                    breakBadge.classList.add('hidden');
+                }
+            }
+
+            const extraBadge = document.getElementById('badge-extra-work');
+            if (extraBadge) {
+                if (data.extraBasicTasks.length > 0) {
+                    extraBadge.classList.remove('hidden');
+                    extraBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800";
+                    extraBadge.innerText = `${data.extraBasicTasks.length}টি`;
+                } else {
+                    extraBadge.classList.add('hidden');
+                }
+            }
+
+            const proofBadge = document.getElementById('badge-work-proof');
+            if (proofBadge) {
+                if (data.proofs.length > 0) {
+                    proofBadge.classList.remove('hidden');
+                    proofBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+                    proofBadge.innerText = `${data.proofs.length} ফটো`;
+                } else {
+                    proofBadge.classList.add('hidden');
+                }
+            }
+        }
+
+        function loadDateUI(dateStr) {
+            currentDate = dateStr;
+            document.getElementById('datePicker').value = dateStr;
+            document.getElementById('banglaDateDisplay').innerText = formatBanglaDate(dateStr);
+
+            const data = getDayData(dateStr);
+            document.getElementById('inTime').value = data.inTime || '';
+            document.getElementById('outTime').value = data.outTime || '';
+
+            ['HQ', 'TS', 'HQ/TS'].forEach(status => {
+                const btn = document.getElementById('duty-' + status);
+                if (!btn) return;
+                if (data.dutyStatus === status) {
+                    btn.className = "duty-btn py-4 rounded-xl border-2 border-indigo-600 bg-indigo-600 font-bold text-base text-white transition-all shadow-md";
+                } else {
+                    btn.className = "duty-btn py-4 rounded-xl border-2 border-slate-200 bg-white font-bold text-base text-slate-700 hover:border-indigo-300 transition-all shadow-2xs";
+                }
+            });
+
+            updateHomeBadges();
+            if (document.getElementById('page-basic-work').classList.contains('active')) renderBasicWork();
+            if (document.getElementById('page-desk-chair').classList.contains('active')) renderDesks();
+            if (document.getElementById('page-break-time').classList.contains('active')) renderBreakPage();
+            if (document.getElementById('page-attendance-time').classList.contains('active')) renderAttendancePage();
+            if (document.getElementById('page-office-commute').classList.contains('active')) renderCommutePage();
+            if (document.getElementById('page-extra-work').classList.contains('active')) renderExtraWorkPage();
+            if (document.getElementById('page-supplies-refill').classList.contains('active')) renderSuppliesPage();
+            if (document.getElementById('page-closing-report').classList.contains('active')) renderClosingReport();
+            if (document.getElementById('page-notes-issues').classList.contains('active')) renderNotesPage();
+            if (document.getElementById('page-work-proof').classList.contains('active')) renderWorkProofPage();
+        }
+
+        function changeDate(newDate) {
+            if (!newDate) return;
+            loadDateUI(newDate);
+        }
+
+        function saveTimeData() {
+            const data = getDayData(currentDate);
+            data.inTime = document.getElementById('inTime').value;
+            data.outTime = document.getElementById('outTime').value;
+            saveDayData(currentDate, data);
+        }
+
+        function setDutyStatus(status) {
+            const data = getDayData(currentDate);
+            data.dutyStatus = data.dutyStatus === status ? '' : status;
+            saveDayData(currentDate, data);
+            loadDateUI(currentDate);
+        }
+
+        function switchDeskView(view) {
+            currentDeskView = view;
+            const mapView = document.getElementById('deskMapView');
+            const listView = document.getElementById('deskListView');
+            const tabMapBtn = document.getElementById('tabMapBtn');
+            const tabListBtn = document.getElementById('tabListBtn');
+
+            if (view === 'map') {
+                mapView.classList.remove('hidden');
+                listView.classList.add('hidden');
+                tabMapBtn.className = "py-2 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-2xs transition-all";
+                tabListBtn.className = "py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all";
+            } else {
+                mapView.classList.add('hidden');
+                listView.classList.remove('hidden');
+                tabListBtn.className = "py-2 rounded-lg text-xs font-bold bg-white text-indigo-700 shadow-2xs transition-all";
+                tabMapBtn.className = "py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all";
+            }
+            renderDesks();
+        }
+
+        function getDeskCellStyle(st) {
+            if (st.desk && st.chair) {
+                return "bg-emerald-500 text-white border-emerald-600 shadow-2xs";
+            }
+            if (st.desk) {
+                return "bg-sky-100 text-sky-900 border-sky-500";
+            }
+            if (st.chair) {
+                return "bg-amber-100 text-amber-900 border-amber-500";
+            }
+            return "bg-white text-slate-700 border-slate-300 hover:border-indigo-400";
+        }
+
+        function createMapDeskBtn(num, st) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.onclick = () => openDeskModal(num);
+            btn.className = `map-desk-btn w-7 h-7 rounded border text-[11px] font-bold flex items-center justify-center ${getDeskCellStyle(st)}`;
+            btn.innerText = num;
+            return btn;
+        }
+
+        function renderDesks() {
+            const data = getDayData(currentDate);
+            let deskDone = 0;
+            let chairDone = 0;
+            let bothDone = 0;
+
+            for (let i = 1; i <= TOTAL_DESKS; i++) {
+                const st = data.desks[i] || { desk: false, chair: false };
+                if (st.desk) deskDone++;
+                if (st.chair) chairDone++;
+                if (st.desk && st.chair) bothDone++;
+            }
+
+            document.getElementById('deskCount').innerText = deskDone;
+            document.getElementById('chairCount').innerText = chairDone;
+            document.getElementById('bothCount').innerText = bothDone;
+
+            const b70_72 = document.getElementById('map-block-70-72');
+            b70_72.innerHTML = '';
+            [70, 71, 72].forEach(n => b70_72.appendChild(createMapDeskBtn(n, data.desks[n] || { desk: false, chair: false })));
+
+            const b64_69 = document.getElementById('map-block-64-69');
+            b64_69.innerHTML = '';
+            [67, 64, 68, 65, 69, 66].forEach(n => b64_69.appendChild(createMapDeskBtn(n, data.desks[n] || { desk: false, chair: false })));
+
+            const b61_63 = document.getElementById('map-block-61-63');
+            b61_63.innerHTML = '';
+            [63, 62, 61].forEach(n => b61_63.appendChild(createMapDeskBtn(n, data.desks[n] || { desk: false, chair: false })));
+
+            const b52_60 = document.getElementById('map-block-52-60');
+            b52_60.innerHTML = '';
+            for (let n = 60; n >= 52; n--) {
+                b52_60.appendChild(createMapDeskBtn(n, data.desks[n] || { desk: false, chair: false }));
+            }
+
+            const b1_10 = document.getElementById('map-block-1-10');
+            b1_10.innerHTML = '';
+            for (let row = 0; row < 5; row++) {
+                const leftNum = 1 + row;
+                const rightNum = 6 + row;
+                b1_10.appendChild(createMapDeskBtn(leftNum, data.desks[leftNum] || { desk: false, chair: false }));
+                b1_10.appendChild(createMapDeskBtn(rightNum, data.desks[rightNum] || { desk: false, chair: false }));
+            }
+
+            const b11_20 = document.getElementById('map-block-11-20');
+            b11_20.innerHTML = '';
+            for (let row = 0; row < 5; row++) {
+                const leftNum = 11 + row;
+                const rightNum = 16 + row;
+                b11_20.appendChild(createMapDeskBtn(leftNum, data.desks[leftNum] || { desk: false, chair: false }));
+                b11_20.appendChild(createMapDeskBtn(rightNum, data.desks[rightNum] || { desk: false, chair: false }));
+            }
+
+            const b21_26 = document.getElementById('map-block-21-26');
+            b21_26.innerHTML = '';
+            for (let row = 0; row < 3; row++) {
+                const leftNum = 21 + row;
+                const rightNum = 24 + row;
+                b21_26.appendChild(createMapDeskBtn(leftNum, data.desks[leftNum] || { desk: false, chair: false }));
+                b21_26.appendChild(createMapDeskBtn(rightNum, data.desks[rightNum] || { desk: false, chair: false }));
+            }
+
+            const b27_31 = document.getElementById('map-block-27-31');
+            b27_31.innerHTML = '';
+            for (let n = 27; n <= 31; n++) {
+                b27_31.appendChild(createMapDeskBtn(n, data.desks[n] || { desk: false, chair: false }));
+            }
+
+            const b32_41 = document.getElementById('map-block-32-41');
+            b32_41.innerHTML = '';
+            for (let row = 0; row < 5; row++) {
+                const leftNum = 32 + row;
+                const rightNum = 37 + row;
+                b32_41.appendChild(createMapDeskBtn(leftNum, data.desks[leftNum] || { desk: false, chair: false }));
+                b32_41.appendChild(createMapDeskBtn(rightNum, data.desks[rightNum] || { desk: false, chair: false }));
+            }
+
+            const b42_51 = document.getElementById('map-block-42-51');
+            b42_51.innerHTML = '';
+            for (let row = 0; row < 5; row++) {
+                const leftNum = 42 + row;
+                const rightNum = 47 + row;
+                b42_51.appendChild(createMapDeskBtn(leftNum, data.desks[leftNum] || { desk: false, chair: false }));
+                b42_51.appendChild(createMapDeskBtn(rightNum, data.desks[rightNum] || { desk: false, chair: false }));
+            }
+
+            const b73 = document.getElementById('map-block-73');
+            b73.innerHTML = '';
+            b73.appendChild(createMapDeskBtn(73, data.desks[73] || { desk: false, chair: false }));
+
+            const grid = document.getElementById('deskGrid');
+            const searchVal = document.getElementById('deskSearch').value.trim();
+            const filterVal = document.getElementById('deskFilter').value;
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= TOTAL_DESKS; i++) {
+                if (searchVal && String(i) !== searchVal) continue;
+                const st = data.desks[i] || { desk: false, chair: false };
+                const isDone = st.desk && st.chair;
+                if (filterVal === 'pending' && isDone) continue;
+                if (filterVal === 'done' && !isDone) continue;
+
+                const card = document.createElement('div');
+                card.className = `rounded-xl p-2.5 border transition-all ${isDone ? 'bg-emerald-50/70 border-emerald-300' : 'bg-white border-slate-200'}`;
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-sm text-slate-800">ডেস্ক #${i}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${isDone ? 'সম্পন্ন' : 'বাকি'}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button type="button" onclick="toggleDeskItem(${i}, 'desk')" class="py-1.5 px-2 rounded-lg text-xs font-bold border transition-all ${st.desk ? 'bg-sky-600 text-white border-sky-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-sky-300'}">
+                            🖥️ ডেস্ক
+                        </button>
+                        <button type="button" onclick="toggleDeskItem(${i}, 'chair')" class="py-1.5 px-2 rounded-lg text-xs font-bold border transition-all ${st.chair ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-amber-300'}">
+                            🪑 চেয়ার
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function toggleDeskItem(deskNum, field) {
+            const data = getDayData(currentDate);
+            const current = data.desks[deskNum] || { desk: false, chair: false };
+            current[field] = !current[field];
+            data.desks[deskNum] = current;
+            saveDayData(currentDate, data);
+            renderDesks();
+        }
+
+        function resetDesksToday() {
+            if (!confirm('আজকের তারিখের সব ডেস্ক ও চেয়ার ক্লিন স্ট্যাটাস রিসেট করতে চান?')) return;
+            const data = getDayData(currentDate);
+            data.desks = {};
+            saveDayData(currentDate, data);
+            renderDesks();
+        }
+
+        function openDeskModal(num) {
+            activeModalDesk = num;
+            document.getElementById('modalDeskNum').innerText = `#${num}`;
+            document.getElementById('modalDeskTitle').innerText = num;
+            updateDeskModalUI();
+            document.getElementById('deskModalOverlay').classList.remove('hidden');
+        }
+
+        function closeDeskModal() {
+            activeModalDesk = null;
+            document.getElementById('deskModalOverlay').classList.add('hidden');
+        }
+
+        function updateDeskModalUI() {
+            if (!activeModalDesk) return;
+            const data = getDayData(currentDate);
+            const st = data.desks[activeModalDesk] || { desk: false, chair: false };
+
+            const deskBtn = document.getElementById('modalToggleDeskBtn');
+            const deskText = document.getElementById('modalDeskStatusText');
+            if (st.desk) {
+                deskBtn.className = "w-full py-3 px-4 rounded-xl border-2 border-sky-600 bg-sky-50 text-sky-900 font-bold text-sm flex items-center justify-between transition-all";
+                deskText.innerText = "✓ সম্পন্ন";
+            } else {
+                deskBtn.className = "w-full py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm flex items-center justify-between transition-all";
+                deskText.innerText = "বাকি";
+            }
+
+            const chairBtn = document.getElementById('modalToggleChairBtn');
+            const chairText = document.getElementById('modalChairStatusText');
+            if (st.chair) {
+                chairBtn.className = "w-full py-3 px-4 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-900 font-bold text-sm flex items-center justify-between transition-all";
+                chairText.innerText = "✓ সম্পন্ন";
+            } else {
+                chairBtn.className = "w-full py-3 px-4 rounded-xl border-2 border-slate-200 bg-white text-slate-700 font-bold text-sm flex items-center justify-between transition-all";
+                chairText.innerText = "বাকি";
+            }
+        }
+
+        function modalToggleAction(field) {
+            if (!activeModalDesk) return;
+            toggleDeskItem(activeModalDesk, field);
+            updateDeskModalUI();
+        }
+
+        function modalMarkBothDone() {
+            if (!activeModalDesk) return;
+            const data = getDayData(currentDate);
+            data.desks[activeModalDesk] = { desk: true, chair: true };
+            saveDayData(currentDate, data);
+            renderDesks();
+            closeDeskModal();
+        }
+
+        document.getElementById('footerYear').innerText = new Date().getFullYear();
+        loadProfilePhoto();
+        renderMenus();
+        loadDateUI(currentDate);
+    </script>
+</body>
+</html>

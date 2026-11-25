@@ -1,0 +1,8 @@
+{
+  "name": "Sorif Ahmmed — দৈনিক কাজের রিপোর্ট পোর্টাল",
+  "description": "HR & Admin দৈনিক কাজের রিপোর্ট, ৭৩টি ডেস্ক ও চেয়ার ক্লিন ম্যাপ, হাজিরা ও সময়ের হিসাব, বিরতি এবং সমাপ্তি রিপোর্ট পোর্টাল।",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
