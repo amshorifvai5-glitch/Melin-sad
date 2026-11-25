@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  AlertTriangle,
   ArrowLeft,
   ChevronRight,
   Copy,
@@ -13,15 +14,23 @@ import {
 import { DayReportData, DutyStatus, PageId, WorkProofEntry } from '../types/report';
 import {
   EMERGENCY_CONTACTS,
+  LOW_STOCK_ALERT_THRESHOLD,
+  LOW_STOCK_KEY_PREFIX,
   PROFILE_INFO,
   SUPPLY_ITEMS,
+  SUPPLY_USAGE_PRESETS,
+  SUPPLY_USED_KEY_PREFIX,
   buildClosingReportHtml,
   buildClosingReportText,
   compressImageToDataUrl,
   downloadTextFile,
   formatMinutesToHM,
+  getLowStockSupplyItems,
   getNowTimeHHMM,
+  getSupplyUsageStatuses,
+  getSupplyUsedPercent,
   getTotalBreakMinutes,
+  isSupplyLowStock,
   timeToMinutes,
 } from '../data/portalData';
 import { Avatar } from './Avatar';
@@ -689,11 +698,40 @@ export const SuppliesRefillSection: React.FC<{
   onUpdate: (updater: (prev: DayReportData) => DayReportData) => void;
   onBack: () => void;
 }> = ({ data, canEdit, onUpdate, onBack }) => {
+  const lowStockItems = getLowStockSupplyItems(data);
+  const partialUsedItems = getSupplyUsageStatuses(data).filter(
+    (s) => !s.isRefilled && !s.isLow && s.usedPercent > 0
+  );
+
   const toggleSupply = (id: string, checked: boolean) => {
     if (!canEdit) return;
     onUpdate((prev) => ({
       ...prev,
-      supplies: { ...prev.supplies, [id]: checked },
+      supplies: {
+        ...prev.supplies,
+        [id]: checked,
+        ...(checked
+          ? {
+              [`${LOW_STOCK_KEY_PREFIX}${id}`]: false,
+              [`${SUPPLY_USED_KEY_PREFIX}${id}`]: 0,
+            }
+          : {}),
+      },
+    }));
+  };
+
+  const setSupplyUsedPercent = (id: string, percent: number) => {
+    if (!canEdit) return;
+    const clamped = Math.min(100, Math.max(0, Math.round(percent)));
+    const isLow = clamped >= LOW_STOCK_ALERT_THRESHOLD;
+    onUpdate((prev) => ({
+      ...prev,
+      supplies: {
+        ...prev.supplies,
+        [`${SUPPLY_USED_KEY_PREFIX}${id}`]: clamped,
+        [`${LOW_STOCK_KEY_PREFIX}${id}`]: isLow,
+        ...(clamped > 0 ? { [id]: false } : {}),
+      },
     }));
   };
 
@@ -703,44 +741,159 @@ export const SuppliesRefillSection: React.FC<{
         title="মালামাল ও রিফিল"
         subtitle={
           canEdit
-            ? 'আজকের রিফিল বা সরবরাহকৃত মালামাল চেক করুন'
-            : 'শুধুমাত্র দেখার মোড · রিফিল ও মালামাল অবস্থা'
+            ? 'রিফিল সম্পন্ন চেক করুন অথবা প্রতিটি মালামাল কত % শেষ হয়েছে তা নির্ধারণ করুন'
+            : 'শুধুমাত্র দেখার মোড · রিফিল ও কত % শেষ হয়েছে তার অবস্থা'
         }
         onBack={onBack}
       />
 
-      <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-2.5">
+      {lowStockItems.length > 0 && (
+        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-sm font-bold text-rose-900">
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>
+              মালামাল ঘাটতি সতর্কতা (<span className="font-mono-num">{lowStockItems.length}</span>টি জিনিস ৭৫%+ শেষ — কিনতে হবে)
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-rose-800 leading-relaxed font-mono-num">
+            {lowStockItems.map((item) => `${item.label} (${item.usedPercent}% শেষ)`).join(' · ')}
+          </p>
+        </div>
+      )}
+
+      {lowStockItems.length === 0 && partialUsedItems.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1">
+          <div className="text-sm font-bold text-amber-900">ব্যবহৃত মালামালের হিসাব</div>
+          <p className="text-xs sm:text-sm text-amber-800 leading-relaxed font-mono-num">
+            {partialUsedItems.map((item) => `${item.label} (${item.usedPercent}% শেষ)`).join(' · ')}
+          </p>
+        </div>
+      )}
+
+      <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {SUPPLY_ITEMS.map((item) => {
-          const checked = !!data.supplies[item.id];
+          const checked = Boolean(data.supplies[item.id]);
+          const usedPercent = getSupplyUsedPercent(data, item.id);
+          const isLow = isSupplyLowStock(data, item.id);
+          const isPartial = !checked && !isLow && usedPercent > 0;
+
+          const barColorClass = isLow
+            ? 'bg-rose-600'
+            : isPartial
+            ? 'bg-amber-500'
+            : checked
+            ? 'bg-emerald-500'
+            : 'bg-slate-300';
+
           return (
-            <label
+            <div
               key={item.id}
-              className={`p-3.5 rounded-lg border flex items-center justify-between transition-colors ${
-                canEdit ? 'cursor-pointer' : 'cursor-default'
-              } ${
-                checked
-                  ? 'bg-emerald-50/70 border-emerald-200'
+              className={`p-4 rounded-xl border flex flex-col justify-between gap-3 transition-colors ${
+                isLow
+                  ? 'bg-rose-50/60 border-rose-200'
+                  : isPartial
+                  ? 'bg-amber-50/50 border-amber-200'
+                  : checked
+                  ? 'bg-emerald-50/60 border-emerald-200'
                   : 'bg-white border-slate-200'
               }`}
             >
-              <span className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  disabled={!canEdit}
-                  checked={checked}
-                  onChange={(e) => toggleSupply(item.id, e.target.checked)}
-                  className="w-4 h-4 accent-emerald-600 rounded"
-                />
-                <span className="text-sm font-semibold text-slate-900">{item.label}</span>
-              </span>
-              <span
-                className={`text-xs font-semibold ${
-                  checked ? 'text-emerald-700' : 'text-slate-500'
-                }`}
-              >
-                {checked ? 'রিফিল সম্পন্ন' : 'বাকি'}
-              </span>
-            </label>
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  className={`flex items-center gap-3 min-w-0 ${
+                    canEdit ? 'cursor-pointer' : 'cursor-default'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    disabled={!canEdit}
+                    checked={checked}
+                    onChange={(e) => toggleSupply(item.id, e.target.checked)}
+                    className="w-4 h-4 accent-emerald-600 rounded shrink-0"
+                  />
+                  <span className="text-sm font-bold text-slate-900 truncate">
+                    {item.label}
+                  </span>
+                </label>
+
+                <span
+                  className={`text-xs font-bold font-mono-num shrink-0 ${
+                    checked
+                      ? 'text-emerald-700'
+                      : isLow
+                      ? 'text-rose-700'
+                      : isPartial
+                      ? 'text-amber-700'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  {checked
+                    ? 'রিফিল সম্পন্ন'
+                    : isLow
+                    ? `${usedPercent}% শেষ · ঘাটতি`
+                    : usedPercent > 0
+                    ? `${usedPercent}% শেষ`
+                    : '০% শেষ · পূর্ণ'}
+                </span>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500">
+                  <span>ব্যবহার / শেষ হয়েছে</span>
+                  <span className="font-mono-num font-bold text-slate-700">{usedPercent}%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-200 ${barColorClass}`}
+                    style={{ width: `${usedPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              {canEdit && (
+                <div className="space-y-2.5 pt-2.5 border-t border-slate-200/70">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold text-slate-600 whitespace-nowrap shrink-0">
+                      কত % শেষ:
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={5}
+                      value={usedPercent}
+                      aria-label={`${item.label} কত শতাংশ শেষ হয়েছে`}
+                      onChange={(e) => setSupplyUsedPercent(item.id, Number(e.target.value))}
+                      className="w-full accent-indigo-600 cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {SUPPLY_USAGE_PRESETS.map((preset) => {
+                      const active = !checked && usedPercent === preset;
+                      const isAlertPreset = preset >= LOW_STOCK_ALERT_THRESHOLD;
+                      return (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setSupplyUsedPercent(item.id, preset)}
+                          className={`px-2.5 py-1 rounded-md text-xs font-mono-num font-semibold border transition-colors whitespace-nowrap shrink-0 ${
+                            active
+                              ? isAlertPreset
+                                ? 'bg-rose-600 border-rose-600 text-white'
+                                : preset > 0
+                                ? 'bg-amber-600 border-amber-600 text-white'
+                                : 'bg-slate-800 border-slate-800 text-white'
+                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          {preset}%
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

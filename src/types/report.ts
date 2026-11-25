@@ -12,9 +12,36 @@ export type PageId =
   | 'supplies-refill'
   | 'closing-report'
   | 'notes-issues'
-  | 'work-proof';
+  | 'work-proof'
+  | 'office-expenses'
+  | 'feedback';
 
 export type DutyStatus = '' | 'HQ' | 'TS' | 'HQ/TS';
+
+export type FeedbackCategory = 'মতামত' | 'পরামর্শ' | 'অভিযোগ';
+export type FeedbackStatus = 'নতুন' | 'দেখা হয়েছে' | 'সমাধান হয়েছে';
+
+export interface FeedbackEntry {
+  id: string;
+  category: FeedbackCategory;
+  senderName: string;
+  message: string;
+  status: FeedbackStatus;
+  adminNote: string;
+  createdAtMs: number;
+}
+
+export type ExpenseCategory = 'চা-নাস্তা' | 'যাতায়াত' | 'মালামাল ক্রয়' | 'অন্যান্য';
+
+export interface OfficeExpenseEntry {
+  id?: string;
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  time: string;
+  note: string;
+  receiptPhoto?: string;
+}
 
 export interface BasicTaskProgress {
   done: boolean;
@@ -61,9 +88,10 @@ export interface DayReportData {
   desks: Record<number, DeskCleanState>;
   breaks: BreakEntry[];
   commutes: CommuteEntry[];
-  supplies: Record<string, boolean>;
+  supplies: Record<string, boolean | number>;
   notes: string;
   proofs: WorkProofEntry[];
+  expenses: OfficeExpenseEntry[];
 }
 
 export interface MenuItemConfig {

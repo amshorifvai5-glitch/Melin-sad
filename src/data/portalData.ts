@@ -9,7 +9,7 @@ export const PROFILE_INFO = {
   displayNameBn: 'শরিফ আহম্মেদ',
   employeeId: '855',
   roleTitle: 'Junior Associate',
-  roleTitleBn: 'Junior associated',
+  roleTitleBn: 'Junior Associate',
   department: 'HR & Admin',
   workplace: 'HQ / TS',
   joiningDate: '05-10-2026',
@@ -53,18 +53,40 @@ export const EMERGENCY_CONTACTS = [
 
 export const MENU_ITEMS: MenuItemConfig[] = [
   { id: 'personal-info', title: 'ব্যক্তিগত তথ্য', subtitle: 'পরিচিতি ও জরুরি যোগাযোগ' },
-  { id: 'basic-work', title: 'দৈনিক বেসিক কাজ', subtitle: '২১টি রুটিন কাজ ও সময়' },
+  { id: 'basic-work', title: 'দৈনিক বেসিক কাজ', subtitle: '২১টি রুটিন কাজ ও সময়' },
   { id: 'duty-location', title: 'ডিউটি অবস্থান', subtitle: 'HQ / TS লোকেশন' },
   { id: 'desk-chair', title: 'ডেস্ক ও চেয়ার ক্লিন', subtitle: '৭৩টি ডেস্কের ফ্লোর ম্যাপ' },
   { id: 'break-time', title: 'বিরতি সময়', subtitle: 'লাঞ্চ ও চা বিরতি লগ' },
   { id: 'attendance-time', title: 'হাজিরা ও সময়ের হিসাব', subtitle: 'মোট ও কার্যকর ডিউটি ঘণ্টা' },
   { id: 'office-commute', title: 'অফিস যাতায়াত', subtitle: 'অফিস চলাচলের হিসাব' },
-  { id: 'extra-work', title: 'অতিরিক্ত কাজ', subtitle: 'বিশেষ বা অতিরিক্ত দায়িত্ব' },
+  { id: 'extra-work', title: 'অতিরিক্ত কাজ', subtitle: 'বিশেষ বা অতিরিক্ত দায়িত্ব' },
   { id: 'supplies-refill', title: 'মালামাল ও রিফিল', subtitle: 'স্টক ও সরঞ্জাম চেকলিস্ট' },
   { id: 'closing-report', title: 'কাজের সমাপ্তি রিপোর্ট', subtitle: 'অটো-জেনারেটেড সারসংক্ষেপ' },
   { id: 'notes-issues', title: 'বিশেষ নোট ও সমস্যা', subtitle: 'পর্যবেক্ষণ ও ঘাটতি নোট' },
   { id: 'work-proof', title: 'কাজের প্রমাণ', subtitle: 'কাজের ছবি ও বিবরণ' },
+  {
+    id: 'office-expenses',
+    title: 'অফিসের জন্য খরচ',
+    subtitle: 'দৈনিক অফিস খরচের হিসাব',
+  },
+  {
+    id: 'feedback',
+    title: 'আপনার মতামত, পরামর্শ কিংবা আপনার অভিযোগ জানান',
+    subtitle: 'মতামত, পরামর্শ বা অভিযোগ সরাসরি পাঠান',
+  },
 ];
+
+export const EXPENSE_CATEGORIES = ['চা-নাস্তা', 'যাতায়াত', 'মালামাল ক্রয়', 'অন্যান্য'] as const;
+export const MAX_EXPENSE_TITLE_LEN = 200;
+export const MAX_EXPENSE_NOTE_LEN = 500;
+export const MAX_EXPENSE_AMOUNT = 1000000;
+export const MAX_EXPENSE_RECEIPT_LEN = 350000;
+
+export const FEEDBACK_CATEGORIES = ['মতামত', 'পরামর্শ', 'অভিযোগ'] as const;
+export const FEEDBACK_STATUSES = ['নতুন', 'দেখা হয়েছে', 'সমাধান হয়েছে'] as const;
+export const MAX_FEEDBACK_SENDER_LEN = 100;
+export const MAX_FEEDBACK_MESSAGE_LEN = 2000;
+export const MAX_FEEDBACK_ADMIN_NOTE_LEN = 1000;
 
 export const BASIC_TASKS: Array<{ id: string; text: string }> = [
   { id: 'glass_door', text: 'গ্লাস ডোর পরিষ্কার করা হয়েছে' },
@@ -93,7 +115,6 @@ export const BASIC_TASKS: Array<{ id: string; text: string }> = [
 export const SUPPLY_ITEMS: Array<{ id: string; label: string }> = [
   { id: 'handwash', label: 'হ্যান্ডওয়াশ রিফিল' },
   { id: 'tissue_roll', label: 'টিস্যু রোল / বক্স টিস্যু' },
-  { id: 'drinking_water', label: 'খাবার পানির জার / বোতল' },
   { id: 'dishwash_liquid', label: 'ডিশওয়াশ লিকুইড' },
   { id: 'trash_bag', label: 'ডাস্টবিন ব্যাগ' },
   { id: 'glass_cleaner', label: 'গ্লাস ও ফ্লোর ক্লিনার' },
@@ -112,6 +133,7 @@ export function createEmptyDayData(): DayReportData {
     supplies: {},
     notes: '',
     proofs: [],
+    expenses: [],
   };
 }
 
@@ -132,6 +154,7 @@ export function getDayData(dateStr: string): DayReportData {
       supplies: parsed.supplies || {},
       notes: parsed.notes || '',
       proofs: Array.isArray(parsed.proofs) ? parsed.proofs : [],
+      expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
     };
   } catch {
     return createEmptyDayData();
@@ -232,6 +255,69 @@ export function countDeskProgress(data: DayReportData): {
   return { deskDone, chairDone, bothDone };
 }
 
+export const LOW_STOCK_KEY_PREFIX = 'low_';
+export const SUPPLY_USED_KEY_PREFIX = 'used_';
+export const LOW_STOCK_ALERT_THRESHOLD = 75;
+export const SUPPLY_USAGE_PRESETS = [0, 25, 50, 75, 90, 100] as const;
+
+export interface SupplyUsageStatus {
+  id: string;
+  label: string;
+  usedPercent: number;
+  isRefilled: boolean;
+  isLow: boolean;
+}
+
+export function getSupplyUsedPercent(data: DayReportData, supplyId: string): number {
+  if (Boolean(data.supplies[supplyId])) {
+    return 0;
+  }
+  const raw = data.supplies[`${SUPPLY_USED_KEY_PREFIX}${supplyId}`];
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return Math.min(100, Math.max(0, Math.round(raw)));
+  }
+  if (Boolean(data.supplies[`${LOW_STOCK_KEY_PREFIX}${supplyId}`])) {
+    return 100;
+  }
+  return 0;
+}
+
+export function isSupplyLowStock(data: DayReportData, supplyId: string): boolean {
+  if (Boolean(data.supplies[supplyId])) {
+    return false;
+  }
+  return (
+    getSupplyUsedPercent(data, supplyId) >= LOW_STOCK_ALERT_THRESHOLD ||
+    Boolean(data.supplies[`${LOW_STOCK_KEY_PREFIX}${supplyId}`])
+  );
+}
+
+export function getSupplyUsageStatuses(data: DayReportData): SupplyUsageStatus[] {
+  return SUPPLY_ITEMS.map((item) => {
+    const isRefilled = Boolean(data.supplies[item.id]);
+    const usedPercent = getSupplyUsedPercent(data, item.id);
+    const isLow = isSupplyLowStock(data, item.id);
+    return {
+      id: item.id,
+      label: item.label,
+      usedPercent,
+      isRefilled,
+      isLow,
+    };
+  });
+}
+
+export function getLowStockSupplyItems(data: DayReportData): SupplyUsageStatus[] {
+  return getSupplyUsageStatuses(data).filter((item) => item.isLow);
+}
+
+export function getTotalExpenseAmount(data: DayReportData): number {
+  return (data.expenses || []).reduce(
+    (sum, exp) => sum + (Number.isFinite(exp.amount) ? Math.max(0, exp.amount) : 0),
+    0
+  );
+}
+
 export function buildClosingReportText(dateStr: string, data: DayReportData): string {
   let doneBasic = 0;
   const completedLines: string[] = [];
@@ -252,6 +338,8 @@ export function buildClosingReportText(dateStr: string, data: DayReportData): st
 
   const { bothDone } = countDeskProgress(data);
   const breakMins = getTotalBreakMinutes(data);
+  const supplyStatuses = getSupplyUsageStatuses(data).filter((s) => !s.isRefilled && s.usedPercent > 0);
+  const totalExpense = getTotalExpenseAmount(data);
 
   const lines = [
     `কর্মী: ${PROFILE_INFO.displayNameEn} (ID: ${PROFILE_INFO.employeeId})`,
@@ -261,11 +349,34 @@ export function buildClosingReportText(dateStr: string, data: DayReportData): st
     `মোট বিরতি: ${formatMinutesToHM(breakMins)}`,
     `ডেস্ক ও চেয়ার ক্লিন: ${bothDone}/${TOTAL_DESKS} সম্পন্ন`,
     `বেসিক কাজ: ${doneBasic}/${BASIC_TASKS.length} সম্পন্ন`,
+    `অফিসের খরচ: ৳${totalExpense} (${data.expenses.length}টি আইটেম)`,
     `কাজের প্রমাণ ফটো: ${data.proofs.length}টি`,
     '',
     'আজকের সম্পন্ন কাজের বিবরণ:',
     completedLines.length ? completedLines.join('\n') : 'কোনো কাজ সম্পন্ন মার্ক করা হয়নি',
   ];
+
+  if (data.expenses.length > 0) {
+    lines.push(
+      '',
+      'অফিসের জন্য খরচের বিবরণ:',
+      ...data.expenses.map(
+        (exp, idx) =>
+          `${idx + 1}. ${exp.title} (${exp.category}) — ৳${exp.amount}${
+            exp.time ? ` [${exp.time}]` : ''
+          }`
+      )
+    );
+  }
+
+  if (supplyStatuses.length > 0) {
+    lines.push(
+      '',
+      `মালামাল স্টক অবস্থা (কত % শেষ হয়েছে): ${supplyStatuses
+        .map((s) => `${s.label} (${s.usedPercent}% শেষ${s.isLow ? ' — কিনতে হবে' : ''})`)
+        .join(', ')}`
+    );
+  }
 
   if (data.notes.trim()) {
     lines.push('', `বিশেষ নোট: ${data.notes.trim()}`);
@@ -319,14 +430,20 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
             )} – ${escapeHtml(b.end || '--:--')}</li>`
         )
         .join('')
-    : '<li>কোনো বিরতি যুক্ত করা হয়নি</li>';
+    : '<li>কোনো বিরতি যুক্ত করা হয়নি</li>';
 
-  const supplyRows = SUPPLY_ITEMS.map(
-    (s) =>
-      `<li>${escapeHtml(s.label)}: <strong>${
-        data.supplies[s.id] ? 'রিফিল সম্পন্ন' : 'বাকি'
-      }</strong></li>`
-  ).join('');
+  const supplyRows = SUPPLY_ITEMS.map((s) => {
+    const usedPercent = getSupplyUsedPercent(data, s.id);
+    const isLow = isSupplyLowStock(data, s.id);
+    const statusHtml = data.supplies[s.id]
+      ? '<strong style="color:#047857;">রিফিল সম্পন্ন (০% শেষ)</strong>'
+      : isLow
+      ? `<strong style="color:#be123c;">${usedPercent}% শেষ — ঘাটতি (কিনতে হবে)</strong>`
+      : usedPercent > 0
+      ? `<strong style="color:#b45309;">${usedPercent}% শেষ</strong>`
+      : '<strong>বাকি / স্বাভাবিক</strong>';
+    return `<li>${escapeHtml(s.label)}: ${statusHtml}</li>`;
+  }).join('');
 
   const proofCards = data.proofs.length
     ? data.proofs
@@ -341,7 +458,7 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
           </div>`;
         })
         .join('')
-    : '<p class="muted">কোনো কাজের প্রমাণ ফটো যুক্ত করা হয়নি।</p>';
+    : '<p class="muted">কোনো কাজের প্রমাণ ফটো যুক্ত করা হয়নি।</p>';
 
   return `<!doctype html>
 <html lang="bn">
@@ -379,26 +496,43 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
 
     <div class="grid">
       <div class="stat"><div class="stat-label">ডিউটি অবস্থান</div><div class="stat-val">${escapeHtml(data.dutyStatus || 'উল্লেখ নেই')}</div></div>
-      <div class="stat"><div class="stat-label">In / Out সময়</div><div class="stat-val">${escapeHtml(data.inTime || '--:--')} – ${escapeHtml(data.outTime || '--:--')}</div></div>
+      <div class="stat"><div class="stat-label">In / Out সময়</div><div class="stat-val">${escapeHtml(data.inTime || '--:--')} – ${escapeHtml(data.outTime || '--:--')}</div></div>
       <div class="stat"><div class="stat-label">বেসিক কাজ</div><div class="stat-val">${basicDone}/${basicTotal} সম্পন্ন</div></div>
-      <div class="stat"><div class="stat-label">ডেস্ক ও চেয়ার</div><div class="stat-val">ডেস্ক ${deskDone}/${TOTAL_DESKS} · চেয়ার ${chairDone}/${TOTAL_DESKS} (উভয় ${bothDone})</div></div>
+      <div class="stat"><div class="stat-label">ডেস্ক ও চেয়ার</div><div class="stat-val">ডেস্ক ${deskDone}/${TOTAL_DESKS} · চেয়ার ${chairDone}/${TOTAL_DESKS} (উভয় ${bothDone})</div></div>
       <div class="stat"><div class="stat-label">মোট বিরতি</div><div class="stat-val">${escapeHtml(formatMinutesToHM(breakMins))}</div></div>
     </div>
 
     <h2>দৈনিক বেসিক ও অতিরিক্ত কাজ</h2>
     <table>
-      <thead><tr><th>নং</th><th>কাজের বিবরণ</th><th>অবস্থা</th><th>সময়</th></tr></thead>
+      <thead><tr><th>নং</th><th>কাজের বিবরণ</th><th>অবস্থা</th><th>সময়</th></tr></thead>
       <tbody>${taskRows}${extraRows}</tbody>
     </table>
 
-    <h2>বিরতি সময়</h2>
+    <h2>বিরতি সময়</h2>
     <ul>${breakRows}</ul>
 
     <h2>মালামাল ও রিফিল</h2>
     <ul>${supplyRows}</ul>
 
+    <h2>অফিসের জন্য খরচ (মোট: ৳${getTotalExpenseAmount(data)})</h2>
+    ${
+      data.expenses.length > 0
+        ? `<table><thead><tr><th>নং</th><th>খরচের বিবরণ</th><th>ধরন</th><th>পরিমাণ</th><th>রসিদ</th></tr></thead><tbody>${data.expenses
+            .map((exp, idx) => {
+              const safeReceipt =
+                exp.receiptPhoto && exp.receiptPhoto.startsWith('data:image/')
+                  ? `<img src="${exp.receiptPhoto}" alt="রসিদ" style="width:48px;height:48px;object-fit:cover;border-radius:4px;" />`
+                  : '—';
+              return `<tr><td>${idx + 1}</td><td>${escapeHtml(exp.title)}</td><td>${escapeHtml(
+                exp.category
+              )}</td><td>৳${exp.amount}</td><td>${safeReceipt}</td></tr>`;
+            })
+            .join('')}</tbody></table>`
+        : '<p class="muted">আজ কোনো অফিস খরচ যুক্ত করা হয়নি।</p>'
+    }
+
     <h2>বিশেষ নোট ও সমস্যা</h2>
-    <div class="notes">${escapeHtml(data.notes.trim() || 'কোনো বিশেষ নোট যুক্ত করা হয়নি।')}</div>
+    <div class="notes">${escapeHtml(data.notes.trim() || 'কোনো বিশেষ নোট যুক্ত করা হয়নি।')}</div>
 
     <h2>কাজের প্রমাণ</h2>
     <div class="proof-grid">${proofCards}</div>

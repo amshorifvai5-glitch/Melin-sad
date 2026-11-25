@@ -150,7 +150,7 @@ export const DeskFloorMapSection: React.FC<DeskFloorMapSectionProps> = ({
         )}
       </div>
 
-      {/* স্ট্যাটিসটিক্স স্ট্রিপ */}
+      {/* স্ট্যাটিস্টিকস স্ট্রিপ */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white border border-slate-200 rounded-xl p-3.5">
           <div className="text-xs font-medium text-slate-500">ডেস্ক ক্লিন</div>

@@ -5,7 +5,6 @@ import {
   Bus,
   Camera,
   CheckSquare,
-  ChevronRight,
   Clock,
   Coffee,
   Eye,
@@ -17,7 +16,9 @@ import {
   LogOut,
   MapPin,
   Menu,
+  MessageSquarePlus,
   Package,
+  Receipt,
   Sparkles,
   X,
 } from 'lucide-react';
@@ -25,7 +26,11 @@ import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/aut
 import {
   DayReportData,
   DutyStatus,
+  FeedbackCategory,
+  FeedbackEntry,
+  FeedbackStatus,
   MenuItemConfig,
+  OfficeExpenseEntry,
   PageId,
   WorkProofEntry,
 } from './types/report';
@@ -39,22 +44,35 @@ import {
   createEmptyDayData,
   formatBanglaDate,
   getDayData as getLocalDayData,
+  getSupplyUsageStatuses,
   getTodayIsoDate,
   getTotalBreakMinutes,
+  getTotalExpenseAmount,
 } from './data/portalData';
 import { auth, googleProvider, isOwnerAdmin } from './firebase';
 import {
+  CloudExpenseRecord,
   CloudProofRecord,
+  addOfficeExpenseToCloud,
   addWorkProofToCloud,
+  deleteFeedbackFromCloud,
+  deleteOfficeExpenseFromCloud,
   deleteWorkProofFromCloud,
   saveDailyReportToCloud,
   saveProfilePhotoToCloud,
+  submitFeedbackToCloud,
   subscribeToDailyReport,
+  subscribeToFeedbackInbox,
   subscribeToProfilePhoto,
+  updateFeedbackInCloud,
 } from './services/reportSync';
 import { Avatar } from './components/Avatar';
 import { BasicWorkSection } from './components/BasicWorkSection';
 import { DeskFloorMapSection } from './components/DeskFloorMapSection';
+import { FeedbackSection } from './components/FeedbackSection';
+import { HomeDashboard } from './components/HomeDashboard';
+import { OfficeExpensesSection } from './components/OfficeExpensesSection';
+import { OfflineIndicator, PWAInstallButton } from './components/PWAInstallControls';
 import {
   AttendanceTimeSection,
   BreakTimeSection,
@@ -82,12 +100,15 @@ const SECTION_ICONS: Record<MenuItemConfig['id'], React.ReactNode> = {
   'closing-report': <FileText className="w-4 h-4" />,
   'notes-issues': <AlertTriangle className="w-4 h-4" />,
   'work-proof': <Camera className="w-4 h-4" />,
+  'office-expenses': <Receipt className="w-4 h-4" />,
+  feedback: <MessageSquarePlus className="w-4 h-4" />,
 };
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState<string>(() => getTodayIsoDate());
   const [reportDocData, setReportDocData] = useState<DayReportData>(() => createEmptyDayData());
   const [cloudProofs, setCloudProofs] = useState<CloudProofRecord[]>([]);
+  const [cloudExpenses, setCloudExpenses] = useState<CloudExpenseRecord[]>([]);
   const [reportDocExists, setReportDocExists] = useState(false);
   const [loadingReport, setLoadingReport] = useState(true);
 
@@ -100,8 +121,10 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [feedbackItems, setFeedbackItems] = useState<FeedbackEntry[]>([]);
 
   const reportDocExistsRef = useRef(false);
   reportDocExistsRef.current = reportDocExists;
@@ -116,6 +139,7 @@ export default function App() {
   const dayData: DayReportData = {
     ...reportDocData,
     proofs: cloudProofs,
+    expenses: cloudExpenses,
   };
 
   useEffect(() => {
@@ -146,6 +170,9 @@ export default function App() {
       (proofs) => {
         setCloudProofs(proofs);
       },
+      (expenses) => {
+        setCloudExpenses(expenses);
+      },
       () => {
         setLoadingReport(false);
       }
@@ -160,6 +187,17 @@ export default function App() {
   }, [currentDate]);
 
   useEffect(() => {
+    if (!canEdit) {
+      setFeedbackItems([]);
+      return;
+    }
+    const unsubscribe = subscribeToFeedbackInbox((items) => {
+      setFeedbackItems(items);
+    });
+    return () => unsubscribe();
+  }, [canEdit]);
+
+  useEffect(() => {
     if (!toastMessage) return;
     const timer = window.setTimeout(() => setToastMessage(null), 2400);
     return () => window.clearTimeout(timer);
@@ -171,15 +209,34 @@ export default function App() {
 
   const handleAdminSignIn = async () => {
     setAuthLoading(true);
+    setAuthError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (isOwnerAdmin(result.user)) {
-        showToast('অ্যাডমিন এডিট মোড চালু হয়েছে');
+        showToast('অ্যাডমিন এডিট মোড চালু হয়েছে');
       } else {
-        showToast('এই অ্যাকাউন্টটি শুধুমাত্র দেখার মোডে থাকবে');
+        setAuthError(
+          `আপনি ${result.user.email} দিয়ে লগইন করেছেন। এডিট করতে amshorif.vai5@gmail.com দিয়ে লগইন করুন।`
+        );
+        showToast('শুধুমাত্র amshorif.vai5@gmail.com এডিট করতে পারবেন');
       }
-    } catch {
-      showToast('লগইন সম্পন্ন হয়নি');
+    } catch (error: unknown) {
+      const code =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code?: unknown }).code)
+          : '';
+      if (code === 'auth/unauthorized-domain') {
+        setAuthError(
+          `এই ডোমেইনটি (${window.location.hostname}) Firebase Authorized domains-এ যোগ করা নেই।`
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setAuthError('ব্রাউজার লগইন পপআপ ব্লক করেছে—পপআপ Allow করে আবার চেষ্টা করুন।');
+      } else if (code === 'auth/popup-closed-by-user') {
+        setAuthError('লগইন পপআপটি বন্ধ করা হয়েছে—পুনরায় চেষ্টা করুন।');
+      } else {
+        setAuthError('লগইন সম্পন্ন হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।');
+      }
+      showToast('লগইন সম্পন্ন হয়নি');
     } finally {
       setAuthLoading(false);
     }
@@ -187,7 +244,8 @@ export default function App() {
 
   const handleSignOut = async () => {
     await signOut(auth);
-    showToast('লগআউট সম্পন্ন হয়েছে');
+    setAuthError(null);
+    showToast('লগআউট সম্পন্ন হয়েছে');
   };
 
   const updateDayData = (
@@ -273,20 +331,70 @@ export default function App() {
     );
     reportDocExistsRef.current = true;
     setReportDocExists(true);
-    showToast('কাজের প্রমাণ যুক্ত হয়েছে');
+    showToast('কাজের প্রমাণ যুক্ত হয়েছে');
   };
 
   const handleDeleteProof = async (proofId: string) => {
     if (!canEdit) return;
     await deleteWorkProofFromCloud(currentDate, proofId);
-    showToast('কাজের প্রমাণ মুছে ফেলা হয়েছে');
+    showToast('কাজের প্রমাণ মুছে ফেলা হয়েছে');
+  };
+
+  const handleAddExpense = async (expense: OfficeExpenseEntry) => {
+    if (!canEdit || !currentUser) return;
+    await addOfficeExpenseToCloud(
+      currentDate,
+      currentUser.uid,
+      reportDocExistsRef.current,
+      latestReportRef.current,
+      expense
+    );
+    reportDocExistsRef.current = true;
+    setReportDocExists(true);
+    showToast('অফিসের খরচ যুক্ত হয়েছে');
+  };
+
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!canEdit) return;
+    await deleteOfficeExpenseFromCloud(currentDate, expenseId);
+    showToast('খরচের এন্ট্রি মুছে ফেলা হয়েছে');
   };
 
   const handleSyncLocalDraft = () => {
     if (!canEdit || !currentUser) return;
     const localDraft = getLocalDayData(currentDate);
     updateDayData(() => localDraft);
-    showToast('আগের সংরক্ষিত তথ্য ক্লাউডে আপলোড হয়েছে');
+    showToast('আগের সংরক্ষিত তথ্য ক্লাউডে আপলোড হয়েছে');
+  };
+
+  const handleSubmitFeedback = async (payload: {
+    category: FeedbackCategory;
+    senderName: string;
+    message: string;
+  }) => {
+    await submitFeedbackToCloud(payload);
+    showToast(
+      payload.category === 'অভিযোগ'
+        ? 'আমি আন্তরিকভাবে দুঃখিত — আপনার অভিযোগটি গ্রহণ করা হয়েছে'
+        : payload.category === 'পরামর্শ'
+        ? 'আপনার পরামর্শের জন্য আন্তরিক ধন্যবাদ'
+        : 'আপনার মতামতের জন্য আন্তরিক ধন্যবাদ'
+    );
+  };
+
+  const handleUpdateFeedback = async (
+    feedbackId: string,
+    updates: { status: FeedbackStatus; adminNote: string }
+  ) => {
+    if (!canEdit) return;
+    await updateFeedbackInCloud(feedbackId, updates);
+    showToast('স্ট্যাটাস ও নোট আপডেট হয়েছে');
+  };
+
+  const handleDeleteFeedback = async (feedbackId: string) => {
+    if (!canEdit) return;
+    await deleteFeedbackFromCloud(feedbackId);
+    showToast('বার্তাটি মুছে ফেলা হয়েছে');
   };
 
   const hasLocalDraft = (() => {
@@ -312,6 +420,16 @@ export default function App() {
   const deskProgress = countDeskProgress(dayData);
   const breakMinutes = getTotalBreakMinutes(dayData);
 
+  const unreadFeedbackCount = feedbackItems.filter((item) => item.status === 'নতুন').length;
+  const usedSupplyItems = getSupplyUsageStatuses(dayData).filter(
+    (s) => !s.isRefilled && s.usedPercent > 0
+  );
+  const maxSupplyUsed =
+    usedSupplyItems.length > 0
+      ? Math.max(...usedSupplyItems.map((s) => s.usedPercent))
+      : 0;
+  const totalExpenses = getTotalExpenseAmount(dayData);
+
   const getSectionBadgeText = (id: MenuItemConfig['id']): string | null => {
     switch (id) {
       case 'personal-info':
@@ -328,8 +446,14 @@ export default function App() {
         return dayData.extraBasicTasks.length > 0
           ? `${dayData.extraBasicTasks.length}টি`
           : null;
+      case 'supplies-refill':
+        return maxSupplyUsed > 0 ? `${maxSupplyUsed}% শেষ` : null;
       case 'work-proof':
         return dayData.proofs.length > 0 ? `${dayData.proofs.length} ফটো` : null;
+      case 'office-expenses':
+        return totalExpenses > 0 ? `৳${totalExpenses}` : null;
+      case 'feedback':
+        return canEdit && unreadFeedbackCount > 0 ? `${unreadFeedbackCount} নতুন` : null;
       default:
         return null;
     }
@@ -436,6 +560,7 @@ export default function App() {
               <button
                 key={item.id}
                 type="button"
+                title={item.title}
                 onClick={() => navigateTo(item.id)}
                 className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
                   isActive
@@ -462,8 +587,9 @@ export default function App() {
           })}
         </nav>
 
-        {/* সাইডবার ফুটার: অ্যাডমিন লগইন / মোড */}
+        {/* সাইডবার ফুটার: অ্যাপ ইনস্টল ও অ্যাডমিন লগইন */}
         <div className="p-3 border-t border-slate-800 space-y-2">
+          <PWAInstallButton variant="sidebar" />
           {currentUser ? (
             <div className="space-y-2">
               <div className="px-2.5 py-2 rounded-lg bg-slate-800/70 text-xs">
@@ -569,6 +695,8 @@ export default function App() {
                 className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono-num font-semibold text-slate-800 focus:outline-none focus:border-indigo-600"
               />
 
+              <PWAInstallButton variant="header" />
+
               <button
                 type="button"
                 onClick={() => navigateTo('closing-report')}
@@ -583,20 +711,20 @@ export default function App() {
         {/* মূল ভিউপোর্ট */}
         <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-4">
           {!canEdit && (
-            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700">
-                {currentUser ? (
-                  <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                ) : (
-                  <Eye className="w-4 h-4 text-indigo-600 shrink-0" />
-                )}
-                <span>
-                  {currentUser
-                    ? `শুধুমাত্র দেখার মোড — আপনি (${currentUser.email}) এডিট করতে পারবেন না।`
-                    : 'আপনি দেখার মোডে আছেন · শুধুমাত্র অ্যাডমিন তথ্য এডিট করতে পারবেন।'}
-                </span>
-              </div>
-              {!currentUser && (
+            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700">
+                  {currentUser ? (
+                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-indigo-600 shrink-0" />
+                  )}
+                  <span>
+                    {currentUser
+                      ? `শুধুমাত্র দেখার মোড — আপনি (${currentUser.email}) এডিট করতে পারবেন না।`
+                      : 'আপনি দেখার মোডে আছেন · শুধুমাত্র অ্যাডমিন তথ্য এডিট করতে পারবেন।'}
+                  </span>
+                </div>
                 <button
                   type="button"
                   disabled={authLoading || !authReady}
@@ -604,8 +732,13 @@ export default function App() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  অ্যাডমিন লগইন
+                  {currentUser ? 'অন্য অ্যাকাউন্টে লগইন' : 'অ্যাডমিন লগইন'}
                 </button>
+              </div>
+              {authError && (
+                <div className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                  {authError}
+                </div>
               )}
             </div>
           )}
@@ -613,7 +746,7 @@ export default function App() {
           {hasLocalDraft && (
             <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
               <span className="text-xs sm:text-sm font-medium text-indigo-900">
-                এই তারিখের আগের ব্রাউজারে সেভ করা তথ্য পাওয়া গেছে। ক্লাউডে আপলোড করতে চান?
+                এই তারিখের জন্য ব্রাউজারে আগে সেভ করা তথ্য পাওয়া গেছে। ক্লাউডে আপলোড করতে চান?
               </span>
               <button
                 type="button"
@@ -632,94 +765,15 @@ export default function App() {
           ) : (
             <>
               {activePage === 'home' && (
-                <div className="space-y-6">
-                  {/* ওভারভিউ এবং লাইভ স্ট্যাটাস */}
-                  <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                    <div className="space-y-1">
-                      <div className="text-xs font-semibold text-indigo-700">
-                        {PROFILE_INFO.department} · Daily Operations Portal
-                      </div>
-                      <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                        দৈনিক কাজের রিপোর্ট ও কার্যক্রম
-                      </h1>
-                      <p className="text-sm text-slate-600">
-                        কর্মস্থল: {PROFILE_INFO.workplace} · নির্ধারিত ডিউটি:{' '}
-                        {PROFILE_INFO.shiftLabel}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3 shrink-0">
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-center">
-                        <div className="text-xs font-medium text-slate-500">ডিউটি লোকেশন</div>
-                        <div className="text-base font-bold text-indigo-700 mt-0.5">
-                          {dayData.dutyStatus || 'নির্ধারিত নয়'}
-                        </div>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-center">
-                        <div className="text-xs font-medium text-slate-500">বেসিক কাজ</div>
-                        <div className="text-base font-bold text-emerald-700 font-mono-num mt-0.5">
-                          {basicProgress.done}/{basicProgress.total}
-                        </div>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-center">
-                        <div className="text-xs font-medium text-slate-500">ডেস্ক ও চেয়ার</div>
-                        <div className="text-base font-bold text-sky-700 font-mono-num mt-0.5">
-                          {deskProgress.bothDone}/{TOTAL_DESKS}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ১২টি মেনু সেকশন */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-base font-bold text-slate-900">কাজের মেনু তালিকা</h2>
-                      <span className="text-xs font-medium text-slate-500 font-mono-num">
-                        {MENU_ITEMS.length}টি সেকশন
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {MENU_ITEMS.map((item, idx) => {
-                        const badge = getSectionBadgeText(item.id);
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => navigateTo(item.id)}
-                            className="bg-white border border-slate-200 hover:border-indigo-500 rounded-xl p-4 flex items-center justify-between gap-3 text-left transition-colors group"
-                          >
-                            <div className="flex items-center gap-3.5 min-w-0">
-                              <span className="w-10 h-10 rounded-lg bg-slate-100 group-hover:bg-indigo-50 text-slate-700 group-hover:text-indigo-700 flex items-center justify-center shrink-0 transition-colors">
-                                {SECTION_ICONS[item.id]}
-                              </span>
-                              <div className="min-w-0">
-                                <div className="font-bold text-slate-900 text-sm sm:text-base group-hover:text-indigo-700 transition-colors truncate">
-                                  <span className="font-mono-num text-slate-500 mr-1.5">
-                                    {idx + 1}.
-                                  </span>
-                                  {item.title}
-                                </div>
-                                <div className="text-xs text-slate-500 truncate mt-0.5">
-                                  {item.subtitle}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2.5 shrink-0">
-                              {badge && (
-                                <span className="text-xs font-mono-num font-bold text-indigo-700">
-                                  {badge}
-                                </span>
-                              )}
-                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                <HomeDashboard
+                  currentDate={currentDate}
+                  dayData={dayData}
+                  profilePhoto={profilePhoto}
+                  canEdit={canEdit}
+                  unreadFeedbackCount={unreadFeedbackCount}
+                  sectionIcons={SECTION_ICONS}
+                  onNavigate={navigateTo}
+                />
               )}
 
               {activePage === 'personal-info' && (
@@ -840,6 +894,27 @@ export default function App() {
                   onBack={() => navigateTo('home')}
                 />
               )}
+
+              {activePage === 'office-expenses' && (
+                <OfficeExpensesSection
+                  data={dayData}
+                  canEdit={canEdit}
+                  onAddExpense={handleAddExpense}
+                  onDeleteExpense={handleDeleteExpense}
+                  onBack={() => navigateTo('home')}
+                />
+              )}
+
+              {activePage === 'feedback' && (
+                <FeedbackSection
+                  canEdit={canEdit}
+                  inboxItems={feedbackItems}
+                  onSubmitFeedback={handleSubmitFeedback}
+                  onUpdateFeedback={handleUpdateFeedback}
+                  onDeleteFeedback={handleDeleteFeedback}
+                  onBack={() => navigateTo('home')}
+                />
+              )}
             </>
           )}
         </main>
@@ -853,6 +928,9 @@ export default function App() {
           <div>কর্মস্থল: {PROFILE_INFO.workplace}</div>
         </footer>
       </div>
+
+      {/* অফলাইন ইন্ডিকেটর */}
+      <OfflineIndicator />
 
       {/* টোস্ট নোটিফিকেশন */}
       {toastMessage && (

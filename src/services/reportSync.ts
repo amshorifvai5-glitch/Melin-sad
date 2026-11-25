@@ -1,8 +1,10 @@
 import {
+  Timestamp,
   collection,
   deleteDoc,
   doc,
   onSnapshot,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -10,10 +12,35 @@ import {
   where,
 } from 'firebase/firestore';
 import { OperationType, db, handleFirestoreError } from '../firebase';
-import { DayReportData, WorkProofEntry } from '../types/report';
-import { createEmptyDayData } from '../data/portalData';
+import {
+  DayReportData,
+  ExpenseCategory,
+  FeedbackCategory,
+  FeedbackEntry,
+  FeedbackStatus,
+  OfficeExpenseEntry,
+  WorkProofEntry,
+} from '../types/report';
+import {
+  EXPENSE_CATEGORIES,
+  FEEDBACK_CATEGORIES,
+  FEEDBACK_STATUSES,
+  MAX_EXPENSE_AMOUNT,
+  MAX_EXPENSE_NOTE_LEN,
+  MAX_EXPENSE_RECEIPT_LEN,
+  MAX_EXPENSE_TITLE_LEN,
+  MAX_FEEDBACK_ADMIN_NOTE_LEN,
+  MAX_FEEDBACK_MESSAGE_LEN,
+  MAX_FEEDBACK_SENDER_LEN,
+  SUPPLY_USED_KEY_PREFIX,
+  createEmptyDayData,
+} from '../data/portalData';
 
 export interface CloudProofRecord extends WorkProofEntry {
+  id: string;
+}
+
+export interface CloudExpenseRecord extends OfficeExpenseEntry {
   id: string;
 }
 
@@ -42,7 +69,18 @@ function sanitizeDailyReportPayload(data: DayReportData) {
       mode: String(c.mode || '').slice(0, 100),
       time: String(c.time || '').slice(0, 10),
     })),
-    supplies: data.supplies || {},
+    supplies: Object.fromEntries(
+      Object.entries(data.supplies || {})
+        .slice(0, 30)
+        .map(([k, v]) => {
+          const key = String(k).slice(0, 64);
+          if (key.startsWith(SUPPLY_USED_KEY_PREFIX)) {
+            const num = typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : 0;
+            return [key, Math.min(100, Math.max(0, num))];
+          }
+          return [key, Boolean(v)];
+        })
+    ),
     notes: String(data.notes || '').slice(0, 5000),
   };
 }
@@ -51,6 +89,7 @@ export function subscribeToDailyReport(
   dateId: string,
   onReportData: (data: DayReportData, docExists: boolean) => void,
   onProofsData: (proofs: CloudProofRecord[]) => void,
+  onExpensesData: (expenses: CloudExpenseRecord[]) => void,
   onError: (err: unknown) => void
 ): () => void {
   const reportPath = `daily_reports/${dateId}`;
@@ -77,6 +116,7 @@ export function subscribeToDailyReport(
           supplies: raw.supplies || {},
           notes: raw.notes || '',
           proofs: [],
+          expenses: [],
         },
         true
       );
@@ -114,9 +154,43 @@ export function subscribeToDailyReport(
     }
   );
 
+  const expensesPath = `daily_reports/${dateId}/expenses`;
+  const expensesQuery = query(
+    collection(db, 'daily_reports', dateId, 'expenses'),
+    where('isPublic', '==', true)
+  );
+
+  const unsubExpenses = onSnapshot(
+    expensesQuery,
+    (snapshot) => {
+      const items: CloudExpenseRecord[] = snapshot.docs.map((d) => {
+        const raw = d.data();
+        const cat = EXPENSE_CATEGORIES.includes(raw.category)
+          ? (raw.category as ExpenseCategory)
+          : 'অন্যান্য';
+        return {
+          id: d.id,
+          title: String(raw.title || ''),
+          category: cat,
+          amount: typeof raw.amount === 'number' && Number.isFinite(raw.amount) ? raw.amount : 0,
+          time: String(raw.time || ''),
+          note: String(raw.note || ''),
+          receiptPhoto: typeof raw.receiptPhoto === 'string' ? raw.receiptPhoto : '',
+        };
+      });
+      items.sort((a, b) => b.id.localeCompare(a.id));
+      onExpensesData(items);
+    },
+    (error) => {
+      onError(error);
+      handleFirestoreError(error, OperationType.LIST, expensesPath);
+    }
+  );
+
   return () => {
     unsubReport();
     unsubProofs();
+    unsubExpenses();
   };
 }
 
@@ -212,6 +286,61 @@ export async function deleteWorkProofFromCloud(
   }
 }
 
+export async function addOfficeExpenseToCloud(
+  dateId: string,
+  ownerUid: string,
+  parentDocExists: boolean,
+  currentReportData: DayReportData,
+  expense: OfficeExpenseEntry
+): Promise<void> {
+  if (!parentDocExists) {
+    await saveDailyReportToCloud(dateId, ownerUid, currentReportData, false);
+  }
+
+  const expenseId = `exp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const path = `daily_reports/${dateId}/expenses/${expenseId}`;
+  const cleanCategory: ExpenseCategory = EXPENSE_CATEGORIES.includes(expense.category)
+    ? expense.category
+    : 'অন্যান্য';
+  const cleanTitle = String(expense.title || '')
+    .trim()
+    .slice(0, MAX_EXPENSE_TITLE_LEN);
+  const cleanAmount = Math.min(
+    MAX_EXPENSE_AMOUNT,
+    Math.max(0, Number.isFinite(expense.amount) ? Number(expense.amount) : 0)
+  );
+
+  try {
+    await setDoc(doc(db, 'daily_reports', dateId, 'expenses', expenseId), {
+      dateId,
+      ownerUid,
+      isPublic: true,
+      title: cleanTitle,
+      category: cleanCategory,
+      amount: cleanAmount,
+      time: String(expense.time || '').slice(0, 20),
+      note: String(expense.note || '').trim().slice(0, MAX_EXPENSE_NOTE_LEN),
+      receiptPhoto: String(expense.receiptPhoto || '').slice(0, MAX_EXPENSE_RECEIPT_LEN),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+}
+
+export async function deleteOfficeExpenseFromCloud(
+  dateId: string,
+  expenseId: string
+): Promise<void> {
+  const path = `daily_reports/${dateId}/expenses/${expenseId}`;
+  try {
+    await deleteDoc(doc(db, 'daily_reports', dateId, 'expenses', expenseId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 export async function saveProfilePhotoToCloud(
   ownerUid: string,
   photoDataUrl: string,
@@ -239,5 +368,112 @@ export async function saveProfilePhotoToCloud(
       profileDocExists ? OperationType.UPDATE : OperationType.CREATE,
       path
     );
+  }
+}
+
+export async function submitFeedbackToCloud(payload: {
+  category: FeedbackCategory;
+  senderName: string;
+  message: string;
+}): Promise<void> {
+  const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const path = `feedback/${feedbackId}`;
+  const cleanCategory: FeedbackCategory = FEEDBACK_CATEGORIES.includes(payload.category)
+    ? payload.category
+    : 'মতামত';
+  const cleanSender = String(payload.senderName || '')
+    .trim()
+    .slice(0, MAX_FEEDBACK_SENDER_LEN);
+  const cleanMessage = String(payload.message || '')
+    .trim()
+    .slice(0, MAX_FEEDBACK_MESSAGE_LEN);
+
+  if (!cleanMessage) {
+    throw new Error('বার্তা খালি রাখা যাবে না');
+  }
+
+  try {
+    await setDoc(doc(db, 'feedback', feedbackId), {
+      feedbackId,
+      category: cleanCategory,
+      senderName: cleanSender,
+      message: cleanMessage,
+      status: 'নতুন',
+      adminNote: '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+}
+
+export function subscribeToFeedbackInbox(
+  onItems: (items: FeedbackEntry[]) => void,
+  onError?: (err: unknown) => void
+): () => void {
+  const path = 'feedback';
+  const q = query(collection(db, 'feedback'), orderBy('createdAt', 'desc'));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items: FeedbackEntry[] = snapshot.docs.map((d) => {
+        const raw = d.data();
+        const cat = FEEDBACK_CATEGORIES.includes(raw.category)
+          ? (raw.category as FeedbackCategory)
+          : 'মতামত';
+        const st = FEEDBACK_STATUSES.includes(raw.status)
+          ? (raw.status as FeedbackStatus)
+          : 'নতুন';
+        const createdAtTs = raw.createdAt instanceof Timestamp ? raw.createdAt.toMillis() : 0;
+        return {
+          id: d.id,
+          category: cat,
+          senderName: String(raw.senderName || ''),
+          message: String(raw.message || ''),
+          status: st,
+          adminNote: String(raw.adminNote || ''),
+          createdAtMs: createdAtTs,
+        };
+      });
+      onItems(items);
+    },
+    (error) => {
+      onError?.(error);
+      handleFirestoreError(error, OperationType.LIST, path);
+    }
+  );
+}
+
+export async function updateFeedbackInCloud(
+  feedbackId: string,
+  updates: { status: FeedbackStatus; adminNote: string }
+): Promise<void> {
+  const path = `feedback/${feedbackId}`;
+  const cleanStatus: FeedbackStatus = FEEDBACK_STATUSES.includes(updates.status)
+    ? updates.status
+    : 'নতুন';
+  const cleanNote = String(updates.adminNote || '')
+    .trim()
+    .slice(0, MAX_FEEDBACK_ADMIN_NOTE_LEN);
+
+  try {
+    await updateDoc(doc(db, 'feedback', feedbackId), {
+      status: cleanStatus,
+      adminNote: cleanNote,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+export async function deleteFeedbackFromCloud(feedbackId: string): Promise<void> {
+  const path = `feedback/${feedbackId}`;
+  try {
+    await deleteDoc(doc(db, 'feedback', feedbackId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

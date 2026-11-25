@@ -100,6 +100,59 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function isValidFeedback(data, feedbackId) {
+      return data.keys().hasAll([
+          'feedbackId', 'category', 'senderName', 'message',
+          'status', 'adminNote', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'feedbackId', 'category', 'senderName', 'message',
+          'status', 'adminNote', 'createdAt', 'updatedAt'
+        ])
+        && data.feedbackId is string
+        && data.feedbackId == feedbackId
+        && data.category is string
+        && data.category.size() <= 30
+        && data.category in ['মতামত', 'পরামর্শ', 'অভিযোগ']
+        && data.senderName is string
+        && data.senderName.size() <= 100
+        && data.message is string
+        && data.message.size() >= 1 && data.message.size() <= 2000
+        && data.status is string
+        && data.status.size() <= 30
+        && data.status in ['নতুন', 'দেখা হয়েছে', 'সমাধান হয়েছে']
+        && data.adminNote is string
+        && data.adminNote.size() <= 1000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOfficeExpense(data, dateId) {
+      return data.keys().hasAll([
+          'dateId', 'ownerUid', 'isPublic', 'title',
+          'category', 'amount', 'time', 'note', 'receiptPhoto',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'dateId', 'ownerUid', 'isPublic', 'title',
+          'category', 'amount', 'time', 'note', 'receiptPhoto',
+          'createdAt', 'updatedAt'
+        ])
+        && data.dateId is string && data.dateId == dateId
+        && data.ownerUid is string
+        && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128
+        && data.isPublic is bool && data.isPublic == true
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.category is string && data.category.size() <= 40
+        && data.category in ['চা-নাস্তা', 'যাতায়াত', 'মালামাল ক্রয়', 'অন্যান্য']
+        && data.amount is number && data.amount >= 0 && data.amount <= 1000000
+        && data.time is string && data.time.size() <= 20
+        && data.note is string && data.note.size() <= 500
+        && data.receiptPhoto is string && data.receiptPhoto.size() <= 350000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
     // Connection check document
     match /test/connection {
       allow get: if true;
@@ -183,6 +236,64 @@ service cloud.firestore {
 
         allow delete: if isAdmin() && isValidDateId(dateId) && isValidId(proofId);
       }
+
+      // Office expenses subcollection
+      match /expenses/{expenseId} {
+        allow get: if isValidDateId(dateId) && isValidId(expenseId);
+        allow list: if isValidDateId(dateId)
+          && existing().isPublic == true;
+
+        allow create: if isAdmin()
+          && isValidDateId(dateId)
+          && isValidId(expenseId)
+          && isValidOfficeExpense(incoming(), dateId)
+          && incoming().ownerUid == request.auth.uid
+          && exists(/databases/$(database)/documents/daily_reports/$(dateId))
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isAdmin()
+          && isValidDateId(dateId)
+          && isValidId(expenseId)
+          && isValidOfficeExpense(incoming(), dateId)
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().dateId == existing().dateId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'category', 'amount', 'time', 'note', 'receiptPhoto', 'updatedAt'
+          ]);
+
+        allow delete: if isAdmin() && isValidDateId(dateId) && isValidId(expenseId);
+      }
+    }
+
+    // Feedback, suggestions, and complaints: public write-once drop-box, admin-only inbox
+    match /feedback/{feedbackId} {
+      allow get: if isAdmin() && isValidId(feedbackId);
+      allow list: if isAdmin();
+
+      allow create: if isValidId(feedbackId)
+        && isValidFeedback(incoming(), feedbackId)
+        && incoming().status == 'নতুন'
+        && incoming().adminNote == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && isValidId(feedbackId)
+        && isValidFeedback(incoming(), feedbackId)
+        && incoming().feedbackId == existing().feedbackId
+        && incoming().category == existing().category
+        && incoming().senderName == existing().senderName
+        && incoming().message == existing().message
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'adminNote', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(feedbackId);
     }
   }
 }

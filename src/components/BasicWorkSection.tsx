@@ -146,8 +146,8 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
             <h2 className="text-xl font-bold text-slate-900">দৈনিক বেসিক কাজ</h2>
             <p className="text-xs text-slate-500">
               {canEdit
-                ? 'কাজে টিক দিন এবং পাশের ঘরে শেষ করার সময় সংরক্ষণ করুন'
-                : 'শুধুমাত্র দেখার মোড · সম্পন্ন কাজের তালিকা ও সময়'}
+                ? 'কাজে টিক দিন এবং পাশের ঘরে শেষ করার সময় সংরক্ষণ করুন'
+                : 'শুধুমাত্র দেখার মোড · সম্পন্ন কাজের তালিকা ও সময়'}
             </p>
           </div>
         </div>
