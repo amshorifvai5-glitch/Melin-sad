@@ -33,14 +33,14 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 's
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border border-slate-200 rounded-xl max-w-sm w-full p-5 shadow-lg space-y-4 text-slate-900"
+            className="bg-[#101829] border border-slate-800 rounded-xl max-w-sm w-full p-5 shadow-2xl space-y-4 text-slate-100"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-white">
                   আপডেট কাজ চলমান আছে
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1.5">
+                <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
                   মোবাইল অ্যাপের আপডেট কাজ চলমান আছে। খুব শীঘ্রই এটি ব্যবহার করা যাবে।
                 </p>
               </div>
@@ -48,7 +48,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 's
                 type="button"
                 onClick={() => setShowNoticeModal(false)}
                 aria-label="বন্ধ করুন"
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -57,7 +57,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 's
             <button
               type="button"
               onClick={() => setShowNoticeModal(false)}
-              className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold transition-colors"
+              className="w-full py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs sm:text-sm font-semibold transition-colors"
             >
               বুঝেছি
             </button>

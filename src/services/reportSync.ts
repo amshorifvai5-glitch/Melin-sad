@@ -18,6 +18,8 @@ import {
   FeedbackCategory,
   FeedbackEntry,
   FeedbackStatus,
+  InventoryItem,
+  InventoryUnit,
   OfficeExpenseEntry,
   WorkProofEntry,
 } from '../types/report';
@@ -25,6 +27,7 @@ import {
   EXPENSE_CATEGORIES,
   FEEDBACK_CATEGORIES,
   FEEDBACK_STATUSES,
+  INVENTORY_UNITS,
   MAX_EXPENSE_AMOUNT,
   MAX_EXPENSE_NOTE_LEN,
   MAX_EXPENSE_RECEIPT_LEN,
@@ -32,7 +35,9 @@ import {
   MAX_FEEDBACK_ADMIN_NOTE_LEN,
   MAX_FEEDBACK_MESSAGE_LEN,
   MAX_FEEDBACK_SENDER_LEN,
-  SUPPLY_USED_KEY_PREFIX,
+  MAX_INVENTORY_NAME_LEN,
+  MAX_INVENTORY_NOTE_LEN,
+  MAX_INVENTORY_QTY,
   createEmptyDayData,
 } from '../data/portalData';
 
@@ -72,14 +77,7 @@ function sanitizeDailyReportPayload(data: DayReportData) {
     supplies: Object.fromEntries(
       Object.entries(data.supplies || {})
         .slice(0, 30)
-        .map(([k, v]) => {
-          const key = String(k).slice(0, 64);
-          if (key.startsWith(SUPPLY_USED_KEY_PREFIX)) {
-            const num = typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : 0;
-            return [key, Math.min(100, Math.max(0, num))];
-          }
-          return [key, Boolean(v)];
-        })
+        .map(([k, v]) => [String(k).slice(0, 64), Boolean(v)])
     ),
     notes: String(data.notes || '').slice(0, 5000),
   };
@@ -473,6 +471,131 @@ export async function deleteFeedbackFromCloud(feedbackId: string): Promise<void>
   const path = `feedback/${feedbackId}`;
   try {
     await deleteDoc(doc(db, 'feedback', feedbackId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+export function subscribeToInventoryItems(
+  onItems: (items: InventoryItem[]) => void,
+  onError?: (err: unknown) => void
+): () => void {
+  const path = 'inventory_items';
+  const q = query(collection(db, 'inventory_items'), where('isPublic', '==', true));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items: InventoryItem[] = snapshot.docs.map((d) => {
+        const raw = d.data();
+        const unit = INVENTORY_UNITS.includes(raw.unit)
+          ? (raw.unit as InventoryUnit)
+          : 'পিস';
+        const updatedAtMs = raw.updatedAt instanceof Timestamp ? raw.updatedAt.toMillis() : 0;
+        const qty =
+          typeof raw.quantity === 'number' && Number.isFinite(raw.quantity)
+            ? Math.max(0, raw.quantity)
+            : 0;
+        return {
+          id: d.id,
+          name: String(raw.name || ''),
+          quantity: qty,
+          unit,
+          note: String(raw.note || ''),
+          updatedAtMs,
+        };
+      });
+      items.sort((a, b) => a.name.localeCompare(b.name, 'bn'));
+      onItems(items);
+    },
+    (error) => {
+      onError?.(error);
+      handleFirestoreError(error, OperationType.LIST, path);
+    }
+  );
+}
+
+export async function addInventoryItemToCloud(
+  ownerUid: string,
+  payload: { name: string; quantity: number; unit: InventoryUnit; note: string }
+): Promise<void> {
+  const itemId = `inv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const path = `inventory_items/${itemId}`;
+  const cleanName = String(payload.name || '')
+    .trim()
+    .slice(0, MAX_INVENTORY_NAME_LEN);
+  const cleanUnit: InventoryUnit = INVENTORY_UNITS.includes(payload.unit)
+    ? payload.unit
+    : 'পিস';
+  const cleanQty = Math.min(
+    MAX_INVENTORY_QTY,
+    Math.max(0, Number.isFinite(payload.quantity) ? Math.round(payload.quantity * 100) / 100 : 0)
+  );
+  const cleanNote = String(payload.note || '')
+    .trim()
+    .slice(0, MAX_INVENTORY_NOTE_LEN);
+
+  if (!cleanName) {
+    throw new Error('জিনিসের নাম খালি রাখা যাবে না');
+  }
+
+  try {
+    await setDoc(doc(db, 'inventory_items', itemId), {
+      itemId,
+      ownerUid,
+      isPublic: true,
+      name: cleanName,
+      quantity: cleanQty,
+      unit: cleanUnit,
+      note: cleanNote,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+}
+
+export async function updateInventoryItemInCloud(
+  itemId: string,
+  updates: { name: string; quantity: number; unit: InventoryUnit; note: string }
+): Promise<void> {
+  const path = `inventory_items/${itemId}`;
+  const cleanName = String(updates.name || '')
+    .trim()
+    .slice(0, MAX_INVENTORY_NAME_LEN);
+  const cleanUnit: InventoryUnit = INVENTORY_UNITS.includes(updates.unit)
+    ? updates.unit
+    : 'পিস';
+  const cleanQty = Math.min(
+    MAX_INVENTORY_QTY,
+    Math.max(0, Number.isFinite(updates.quantity) ? Math.round(updates.quantity * 100) / 100 : 0)
+  );
+  const cleanNote = String(updates.note || '')
+    .trim()
+    .slice(0, MAX_INVENTORY_NOTE_LEN);
+
+  if (!cleanName) {
+    throw new Error('জিনিসের নাম খালি রাখা যাবে না');
+  }
+
+  try {
+    await updateDoc(doc(db, 'inventory_items', itemId), {
+      name: cleanName,
+      quantity: cleanQty,
+      unit: cleanUnit,
+      note: cleanNote,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+export async function deleteInventoryItemFromCloud(itemId: string): Promise<void> {
+  const path = `inventory_items/${itemId}`;
+  try {
+    await deleteDoc(doc(db, 'inventory_items', itemId));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }

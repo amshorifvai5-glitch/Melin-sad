@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Armchair,
+  Boxes,
   Bus,
   Camera,
   CheckSquare,
@@ -29,6 +30,8 @@ import {
   FeedbackCategory,
   FeedbackEntry,
   FeedbackStatus,
+  InventoryItem,
+  InventoryUnit,
   MenuItemConfig,
   OfficeExpenseEntry,
   PageId,
@@ -37,6 +40,7 @@ import {
 import {
   MENU_ITEMS,
   PROFILE_INFO,
+  SUPPLY_ITEMS,
   TOTAL_DESKS,
   compressImageToDataUrl,
   countBasicWorkProgress,
@@ -44,7 +48,6 @@ import {
   createEmptyDayData,
   formatBanglaDate,
   getDayData as getLocalDayData,
-  getSupplyUsageStatuses,
   getTodayIsoDate,
   getTotalBreakMinutes,
   getTotalExpenseAmount,
@@ -53,9 +56,11 @@ import { auth, googleProvider, isOwnerAdmin } from './firebase';
 import {
   CloudExpenseRecord,
   CloudProofRecord,
+  addInventoryItemToCloud,
   addOfficeExpenseToCloud,
   addWorkProofToCloud,
   deleteFeedbackFromCloud,
+  deleteInventoryItemFromCloud,
   deleteOfficeExpenseFromCloud,
   deleteWorkProofFromCloud,
   saveDailyReportToCloud,
@@ -63,8 +68,10 @@ import {
   submitFeedbackToCloud,
   subscribeToDailyReport,
   subscribeToFeedbackInbox,
+  subscribeToInventoryItems,
   subscribeToProfilePhoto,
   updateFeedbackInCloud,
+  updateInventoryItemInCloud,
 } from './services/reportSync';
 import { Avatar } from './components/Avatar';
 import { BasicWorkSection } from './components/BasicWorkSection';
@@ -73,6 +80,7 @@ import { FeedbackSection } from './components/FeedbackSection';
 import { HomeDashboard } from './components/HomeDashboard';
 import { OfficeExpensesSection } from './components/OfficeExpensesSection';
 import { OfflineIndicator, PWAInstallButton } from './components/PWAInstallControls';
+import { StockInventorySection } from './components/StockInventorySection';
 import {
   AttendanceTimeSection,
   BreakTimeSection,
@@ -101,8 +109,29 @@ const SECTION_ICONS: Record<MenuItemConfig['id'], React.ReactNode> = {
   'notes-issues': <AlertTriangle className="w-4 h-4" />,
   'work-proof': <Camera className="w-4 h-4" />,
   'office-expenses': <Receipt className="w-4 h-4" />,
+  'stock-inventory': <Boxes className="w-4 h-4" />,
   feedback: <MessageSquarePlus className="w-4 h-4" />,
 };
+
+const VALID_PAGE_IDS = new Set<string>([
+  'home',
+  'emergency-contact',
+  ...MENU_ITEMS.map((item) => item.id),
+]);
+
+function isValidPageId(value: string): value is PageId {
+  return VALID_PAGE_IDS.has(value);
+}
+
+function readPageFromHash(): PageId {
+  const hash = window.location.hash.replace(/^#\/?/, '').trim();
+  return isValidPageId(hash) ? hash : 'home';
+}
+
+function buildHashUrl(page: PageId): string {
+  const base = `${window.location.pathname}${window.location.search}`;
+  return page === 'home' ? base : `${base}#${page}`;
+}
 
 export default function App() {
   const [currentDate, setCurrentDate] = useState<string>(() => getTodayIsoDate());
@@ -112,7 +141,7 @@ export default function App() {
   const [reportDocExists, setReportDocExists] = useState(false);
   const [loadingReport, setLoadingReport] = useState(true);
 
-  const [activePage, setActivePage] = useState<PageId>('home');
+  const [activePage, setActivePage] = useState<PageId>(() => readPageFromHash());
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -125,6 +154,7 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [feedbackItems, setFeedbackItems] = useState<FeedbackEntry[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
 
   const reportDocExistsRef = useRef(false);
   reportDocExistsRef.current = reportDocExists;
@@ -133,6 +163,7 @@ export default function App() {
   latestReportRef.current = reportDocData;
 
   const notesDebounceRef = useRef<number | null>(null);
+  const navDepthRef = useRef<number>(0);
 
   const canEdit = authReady && isOwnerAdmin(currentUser);
 
@@ -141,6 +172,38 @@ export default function App() {
     proofs: cloudProofs,
     expenses: cloudExpenses,
   };
+
+  /* মোবাইল ফোনের ব্যাক বাটন ও ব্রাউজার হিস্ট্রি সিঙ্ক */
+  useEffect(() => {
+    const initialPage = readPageFromHash();
+    if (initialPage !== 'home') {
+      window.history.replaceState({ page: 'home', depth: 0 }, '', buildHashUrl('home'));
+      window.history.pushState({ page: initialPage, depth: 1 }, '', buildHashUrl(initialPage));
+      navDepthRef.current = 1;
+    } else {
+      window.history.replaceState({ page: 'home', depth: 0 }, '', buildHashUrl('home'));
+      navDepthRef.current = 0;
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      const stateObj =
+        event.state && typeof event.state === 'object'
+          ? (event.state as { page?: unknown; depth?: unknown })
+          : null;
+      const statePage = stateObj && typeof stateObj.page === 'string' ? stateObj.page : '';
+      const targetPage: PageId = isValidPageId(statePage) ? statePage : readPageFromHash();
+      const targetDepth =
+        stateObj && typeof stateObj.depth === 'number' ? Math.max(0, stateObj.depth) : 0;
+
+      navDepthRef.current = targetDepth;
+      setActivePage(targetPage);
+      setSidebarOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -154,6 +217,13 @@ export default function App() {
     const unsubscribe = subscribeToProfilePhoto((photo, exists) => {
       setProfilePhoto(photo);
       setProfileDocExists(exists);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToInventoryItems((items) => {
+      setInventoryItems(items);
     });
     return () => unsubscribe();
   }, []);
@@ -360,6 +430,37 @@ export default function App() {
     showToast('খরচের এন্ট্রি মুছে ফেলা হয়েছে');
   };
 
+  const handleAddInventoryItem = async (payload: {
+    name: string;
+    quantity: number;
+    unit: InventoryUnit;
+    note: string;
+  }) => {
+    if (!canEdit || !currentUser) return;
+    await addInventoryItemToCloud(currentUser.uid, payload);
+    showToast('নতুন স্টক আইটেম যুক্ত হয়েছে');
+  };
+
+  const handleUpdateInventoryItem = async (
+    itemId: string,
+    updates: {
+      name: string;
+      quantity: number;
+      unit: InventoryUnit;
+      note: string;
+    }
+  ) => {
+    if (!canEdit) return;
+    await updateInventoryItemInCloud(itemId, updates);
+    showToast('স্টক পরিমাণ আপডেট হয়েছে');
+  };
+
+  const handleDeleteInventoryItem = async (itemId: string) => {
+    if (!canEdit) return;
+    await deleteInventoryItemFromCloud(itemId);
+    showToast('স্টক আইটেম মুছে ফেলা হয়েছে');
+  };
+
   const handleSyncLocalDraft = () => {
     if (!canEdit || !currentUser) return;
     const localDraft = getLocalDayData(currentDate);
@@ -411,23 +512,30 @@ export default function App() {
   })();
 
   const navigateTo = (page: PageId) => {
-    setActivePage(page);
     setSidebarOpen(false);
+    if (page !== activePage) {
+      const nextDepth = navDepthRef.current + 1;
+      navDepthRef.current = nextDepth;
+      window.history.pushState({ page, depth: nextDepth }, '', buildHashUrl(page));
+      setActivePage(page);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleGoBack = (fallback: PageId = 'home') => {
+    if (navDepthRef.current > 0) {
+      window.history.back();
+    } else {
+      navigateTo(fallback);
+    }
   };
 
   const basicProgress = countBasicWorkProgress(dayData);
   const deskProgress = countDeskProgress(dayData);
   const breakMinutes = getTotalBreakMinutes(dayData);
+  const suppliesDone = SUPPLY_ITEMS.filter((s) => Boolean(dayData.supplies[s.id])).length;
 
   const unreadFeedbackCount = feedbackItems.filter((item) => item.status === 'নতুন').length;
-  const usedSupplyItems = getSupplyUsageStatuses(dayData).filter(
-    (s) => !s.isRefilled && s.usedPercent > 0
-  );
-  const maxSupplyUsed =
-    usedSupplyItems.length > 0
-      ? Math.max(...usedSupplyItems.map((s) => s.usedPercent))
-      : 0;
   const totalExpenses = getTotalExpenseAmount(dayData);
 
   const getSectionBadgeText = (id: MenuItemConfig['id']): string | null => {
@@ -447,11 +555,13 @@ export default function App() {
           ? `${dayData.extraBasicTasks.length}টি`
           : null;
       case 'supplies-refill':
-        return maxSupplyUsed > 0 ? `${maxSupplyUsed}% শেষ` : null;
+        return suppliesDone > 0 ? `${suppliesDone}/${SUPPLY_ITEMS.length}` : null;
       case 'work-proof':
         return dayData.proofs.length > 0 ? `${dayData.proofs.length} ফটো` : null;
       case 'office-expenses':
         return totalExpenses > 0 ? `৳${totalExpenses}` : null;
+      case 'stock-inventory':
+        return inventoryItems.length > 0 ? `${inventoryItems.length}টি` : null;
       case 'feedback':
         return canEdit && unreadFeedbackCount > 0 ? `${unreadFeedbackCount} নতুন` : null;
       default:
@@ -467,22 +577,22 @@ export default function App() {
       : MENU_ITEMS.find((m) => m.id === activePage)?.title || 'ড্যাশবোর্ড';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex">
+    <div className="min-h-screen portal-canvas text-slate-100 flex">
       {/* মোবাইল সাইডবার ওভারলে */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-slate-950/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-40 lg:hidden"
         />
       )}
 
       {/* বাম পাশের সাইডবার নেভিগেশন */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-slate-900 text-slate-100 z-50 border-r border-slate-800 flex flex-col shrink-0 transition-transform duration-200 ${
+        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-[#0B1120] text-slate-100 z-50 border-r border-slate-800/90 flex flex-col shrink-0 transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2">
+        <div className="p-4 border-b border-slate-800/90 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
             {canEdit ? (
               <>
@@ -496,7 +606,7 @@ export default function App() {
                     alt={PROFILE_INFO.displayNameEn}
                     sizeClass="w-10 h-10"
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center border border-slate-900">
+                  <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-sky-600 text-white flex items-center justify-center border border-[#0B1120]">
                     <Camera className="w-2.5 h-2.5" />
                   </span>
                 </label>
@@ -541,15 +651,15 @@ export default function App() {
             onClick={() => navigateTo('home')}
             className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left text-sm font-semibold transition-colors ${
               activePage === 'home'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-sky-600 text-white shadow-sm shadow-sky-900/50'
+                : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
             }`}
           >
             <Home className="w-4 h-4 shrink-0" />
             <span className="truncate">হোম ড্যাশবোর্ড</span>
           </button>
 
-          <div className="border-t border-slate-800 my-2.5" />
+          <div className="border-t border-slate-800/80 my-2.5" />
 
           {MENU_ITEMS.map((item, idx) => {
             const isActive =
@@ -564,12 +674,16 @@ export default function App() {
                 onClick={() => navigateTo(item.id)}
                 className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
                   isActive
-                    ? 'bg-slate-800 text-white font-semibold'
-                    : 'text-slate-300 hover:bg-slate-800/70 hover:text-white font-medium'
+                    ? 'bg-slate-800/90 text-white font-semibold border border-sky-500/30'
+                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white font-medium'
                 }`}
               >
                 <span className="flex items-center gap-2.5 min-w-0">
-                  <span className="text-slate-400 shrink-0">{SECTION_ICONS[item.id]}</span>
+                  <span
+                    className={`shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-400'}`}
+                  >
+                    {SECTION_ICONS[item.id]}
+                  </span>
                   <span className="truncate">
                     <span className="font-mono-num text-xs text-slate-500 mr-1">
                       {idx + 1}.
@@ -588,11 +702,11 @@ export default function App() {
         </nav>
 
         {/* সাইডবার ফুটার: অ্যাপ ইনস্টল ও অ্যাডমিন লগইন */}
-        <div className="p-3 border-t border-slate-800 space-y-2">
+        <div className="p-3 border-t border-slate-800/90 space-y-2">
           <PWAInstallButton variant="sidebar" />
           {currentUser ? (
             <div className="space-y-2">
-              <div className="px-2.5 py-2 rounded-lg bg-slate-800/70 text-xs">
+              <div className="px-2.5 py-2 rounded-lg bg-[#101829] border border-slate-800 text-xs">
                 <div className="font-semibold text-white truncate">
                   {canEdit ? 'অ্যাডমিন (এডিট চালু)' : 'শুধুমাত্র দেখার মোড'}
                 </div>
@@ -614,7 +728,7 @@ export default function App() {
               type="button"
               disabled={authLoading || !authReady}
               onClick={() => void handleAdminSignIn()}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors"
             >
               <LogIn className="w-3.5 h-3.5" />
               {authLoading ? 'লগইন হচ্ছে...' : 'অ্যাডমিন লগইন (এডিট)'}
@@ -626,22 +740,22 @@ export default function App() {
       {/* ডান পাশের মূল কন্টেন্ট এলাকা */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* টপ বার */}
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 sm:px-6 py-3">
+        <header className="sticky top-0 z-30 bg-[#0B1120]/90 backdrop-blur-md border-b border-slate-800/90 px-4 sm:px-6 py-3">
           <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="মেনু খুলুন"
-                className="lg:hidden p-2 -ml-2 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                className="lg:hidden p-2 -ml-2 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
               <div className="min-w-0">
-                <div className="text-sm font-bold text-slate-900 truncate whitespace-nowrap">
+                <div className="text-sm font-bold text-white truncate whitespace-nowrap">
                   দৈনিক কাজের রিপোর্ট · {activeTitle}
                 </div>
-                <div className="text-xs text-slate-500 truncate">
+                <div className="text-xs text-slate-400 truncate">
                   {formatBanglaDate(currentDate)} ·{' '}
                   {canEdit ? 'অ্যাডমিন এডিট মোড' : 'শুধুমাত্র দেখার মোড'}
                 </div>
@@ -649,8 +763,8 @@ export default function App() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
-                <span className="text-xs font-semibold text-emerald-700">In</span>
+              <div className="flex items-center gap-2 bg-[#090E1A] border border-slate-700/80 rounded-lg px-2.5 py-1.5">
+                <span className="text-xs font-semibold text-emerald-400">In</span>
                 {canEdit ? (
                   <input
                     type="time"
@@ -659,15 +773,15 @@ export default function App() {
                       updateDayData((prev) => ({ ...prev, inTime: e.target.value }))
                     }
                     aria-label="In Time"
-                    className="bg-transparent text-xs font-mono-num font-bold text-slate-900 focus:outline-none"
+                    className="bg-transparent text-xs font-mono-num font-bold text-slate-100 [color-scheme:dark] focus:outline-none"
                   />
                 ) : (
-                  <span className="text-xs font-mono-num font-bold text-slate-900">
+                  <span className="text-xs font-mono-num font-bold text-slate-100">
                     {dayData.inTime || '--:--'}
                   </span>
                 )}
-                <span className="text-slate-300">|</span>
-                <span className="text-xs font-semibold text-amber-700">Out</span>
+                <span className="text-slate-600">|</span>
+                <span className="text-xs font-semibold text-amber-400">Out</span>
                 {canEdit ? (
                   <input
                     type="time"
@@ -676,10 +790,10 @@ export default function App() {
                       updateDayData((prev) => ({ ...prev, outTime: e.target.value }))
                     }
                     aria-label="Out Time"
-                    className="bg-transparent text-xs font-mono-num font-bold text-slate-900 focus:outline-none"
+                    className="bg-transparent text-xs font-mono-num font-bold text-slate-100 [color-scheme:dark] focus:outline-none"
                   />
                 ) : (
-                  <span className="text-xs font-mono-num font-bold text-slate-900">
+                  <span className="text-xs font-mono-num font-bold text-slate-100">
                     {dayData.outTime || '--:--'}
                   </span>
                 )}
@@ -692,7 +806,7 @@ export default function App() {
                   if (e.target.value) setCurrentDate(e.target.value);
                 }}
                 aria-label="তারিখ নির্বাচন"
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono-num font-semibold text-slate-800 focus:outline-none focus:border-indigo-600"
+                className="bg-[#090E1A] border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs font-mono-num font-semibold text-slate-100 [color-scheme:dark] focus:outline-none focus:border-sky-500"
               />
 
               <PWAInstallButton variant="header" />
@@ -700,7 +814,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => navigateTo('closing-report')}
-                className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
               >
                 রিপোর্ট দেখুন
               </button>
@@ -711,13 +825,13 @@ export default function App() {
         {/* মূল ভিউপোর্ট */}
         <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-4">
           {!canEdit && (
-            <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 space-y-2">
+            <div className="bg-[#101829] border border-slate-800 rounded-xl px-4 py-3 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-700">
+                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-300">
                   {currentUser ? (
-                    <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
                   ) : (
-                    <Eye className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <Eye className="w-4 h-4 text-sky-400 shrink-0" />
                   )}
                   <span>
                     {currentUser
@@ -729,14 +843,14 @@ export default function App() {
                   type="button"
                   disabled={authLoading || !authReady}
                   onClick={() => void handleAdminSignIn()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   {currentUser ? 'অন্য অ্যাকাউন্টে লগইন' : 'অ্যাডমিন লগইন'}
                 </button>
               </div>
               {authError && (
-                <div className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                <div className="text-xs font-medium text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
                   {authError}
                 </div>
               )}
@@ -744,14 +858,14 @@ export default function App() {
           )}
 
           {hasLocalDraft && (
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-xs sm:text-sm font-medium text-indigo-900">
+            <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs sm:text-sm font-medium text-sky-200">
                 এই তারিখের জন্য ব্রাউজারে আগে সেভ করা তথ্য পাওয়া গেছে। ক্লাউডে আপলোড করতে চান?
               </span>
               <button
                 type="button"
                 onClick={handleSyncLocalDraft}
-                className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
               >
                 ক্লাউডে সিঙ্ক করুন
               </button>
@@ -759,7 +873,7 @@ export default function App() {
           )}
 
           {loadingReport ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-8 text-center text-sm text-slate-500">
+            <div className="bg-[#101829] border border-slate-800 rounded-xl p-8 text-center text-sm text-slate-400">
               রিপোর্ট লোড হচ্ছে...
             </div>
           ) : (
@@ -768,6 +882,7 @@ export default function App() {
                 <HomeDashboard
                   currentDate={currentDate}
                   dayData={dayData}
+                  inventoryItems={inventoryItems}
                   profilePhoto={profilePhoto}
                   canEdit={canEdit}
                   unreadFeedbackCount={unreadFeedbackCount}
@@ -780,7 +895,7 @@ export default function App() {
                 <PersonalInfoSection
                   profilePhoto={profilePhoto}
                   canEdit={canEdit}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                   onNavigate={navigateTo}
                   onApplyDefaultShift={handleApplyDefaultShift}
                 />
@@ -788,7 +903,7 @@ export default function App() {
 
               {activePage === 'emergency-contact' && (
                 <EmergencyContactSection
-                  onBack={() => navigateTo('personal-info')}
+                  onBack={() => handleGoBack('personal-info')}
                   onCopy={handleCopy}
                 />
               )}
@@ -798,7 +913,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onUpdate={updateDayData}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -807,7 +922,7 @@ export default function App() {
                   dutyStatus={dayData.dutyStatus}
                   canEdit={canEdit}
                   onSelect={handleSelectDutyStatus}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -816,7 +931,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onUpdate={updateDayData}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -825,7 +940,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onUpdate={updateDayData}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -834,7 +949,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onApplyDefaultShift={handleApplyDefaultShift}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -843,7 +958,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onUpdate={updateDayData}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -852,7 +967,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onUpdate={updateDayData}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -861,7 +976,7 @@ export default function App() {
                   data={dayData}
                   canEdit={canEdit}
                   onUpdate={updateDayData}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -870,7 +985,7 @@ export default function App() {
                   dateStr={currentDate}
                   data={dayData}
                   onCopy={handleCopy}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -881,7 +996,7 @@ export default function App() {
                   onChange={(notes) =>
                     updateDayData((prev) => ({ ...prev, notes }), { debounce: true })
                   }
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -891,7 +1006,7 @@ export default function App() {
                   canEdit={canEdit}
                   onAddProof={handleAddProof}
                   onDeleteProof={handleDeleteProof}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -901,7 +1016,18 @@ export default function App() {
                   canEdit={canEdit}
                   onAddExpense={handleAddExpense}
                   onDeleteExpense={handleDeleteExpense}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
+                />
+              )}
+
+              {activePage === 'stock-inventory' && (
+                <StockInventorySection
+                  items={inventoryItems}
+                  canEdit={canEdit}
+                  onAddItem={handleAddInventoryItem}
+                  onUpdateItem={handleUpdateInventoryItem}
+                  onDeleteItem={handleDeleteInventoryItem}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
 
@@ -912,7 +1038,7 @@ export default function App() {
                   onSubmitFeedback={handleSubmitFeedback}
                   onUpdateFeedback={handleUpdateFeedback}
                   onDeleteFeedback={handleDeleteFeedback}
-                  onBack={() => navigateTo('home')}
+                  onBack={() => handleGoBack('home')}
                 />
               )}
             </>
@@ -920,7 +1046,7 @@ export default function App() {
         </main>
 
         {/* ফুটার */}
-        <footer className="max-w-5xl w-full mx-auto px-4 sm:px-6 py-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <footer className="max-w-5xl w-full mx-auto px-4 sm:px-6 py-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
           <div>
             © {new Date().getFullYear()} {PROFILE_INFO.displayNameEn} (ID:{' '}
             {PROFILE_INFO.employeeId}) · HR & Admin Daily Work Portal
@@ -934,7 +1060,7 @@ export default function App() {
 
       {/* টোস্ট নোটিফিকেশন */}
       {toastMessage && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg z-50 border border-slate-700">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-[#101829] text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-2xl z-50 border border-sky-500/40">
           {toastMessage}
         </div>
       )}

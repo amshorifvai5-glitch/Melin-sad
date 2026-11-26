@@ -153,6 +153,28 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function isValidInventoryItem(data, itemId) {
+      return data.keys().hasAll([
+          'itemId', 'ownerUid', 'isPublic', 'name',
+          'quantity', 'unit', 'note', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'itemId', 'ownerUid', 'isPublic', 'name',
+          'quantity', 'unit', 'note', 'createdAt', 'updatedAt'
+        ])
+        && data.itemId is string && data.itemId == itemId
+        && data.ownerUid is string
+        && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128
+        && data.isPublic is bool && data.isPublic == true
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.quantity is number && data.quantity >= 0 && data.quantity <= 100000
+        && data.unit is string && data.unit.size() >= 1 && data.unit.size() <= 20
+        && data.unit in ['পিস', 'লিটার', 'বোতল', 'বক্স', 'রোল', 'প্যাকেট', 'কেজি']
+        && data.note is string && data.note.size() <= 300
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
     // Connection check document
     match /test/connection {
       allow get: if true;
@@ -294,6 +316,32 @@ service cloud.firestore {
         ]);
 
       allow delete: if isAdmin() && isValidId(feedbackId);
+    }
+
+    // Persistent stock inventory: publicly readable, only verified owner/admin can write
+    match /inventory_items/{itemId} {
+      allow get: if isValidId(itemId);
+      allow list: if existing().isPublic == true;
+
+      allow create: if isAdmin()
+        && isValidId(itemId)
+        && isValidInventoryItem(incoming(), itemId)
+        && incoming().ownerUid == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && isValidId(itemId)
+        && isValidInventoryItem(incoming(), itemId)
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().itemId == existing().itemId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'quantity', 'unit', 'note', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(itemId);
     }
   }
 }

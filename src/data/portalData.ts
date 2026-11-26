@@ -70,11 +70,40 @@ export const MENU_ITEMS: MenuItemConfig[] = [
     subtitle: 'দৈনিক অফিস খরচের হিসাব',
   },
   {
+    id: 'stock-inventory',
+    title: 'মালামাল স্টক ও মজুত',
+    subtitle: 'কোন জিনিস কত পিস বা কত লিটার আছে',
+  },
+  {
     id: 'feedback',
     title: 'আপনার মতামত, পরামর্শ কিংবা আপনার অভিযোগ জানান',
     subtitle: 'মতামত, পরামর্শ বা অভিযোগ সরাসরি পাঠান',
   },
 ];
+
+export const INVENTORY_UNITS = [
+  'পিস',
+  'লিটার',
+  'বোতল',
+  'বক্স',
+  'রোল',
+  'প্যাকেট',
+  'কেজি',
+] as const;
+export const INVENTORY_QUICK_SUGGESTIONS: Array<{
+  name: string;
+  unit: (typeof INVENTORY_UNITS)[number];
+}> = [
+  { name: 'হ্যান্ডওয়াশ', unit: 'লিটার' },
+  { name: 'টিস্যু রোল', unit: 'পিস' },
+  { name: 'বক্স টিস্যু', unit: 'বক্স' },
+  { name: 'ডিশওয়াশ লিকুইড', unit: 'লিটার' },
+  { name: 'ডাস্টবিন ব্যাগ', unit: 'পিস' },
+  { name: 'গ্লাস ও ফ্লোর ক্লিনার', unit: 'লিটার' },
+];
+export const MAX_INVENTORY_NAME_LEN = 120;
+export const MAX_INVENTORY_NOTE_LEN = 300;
+export const MAX_INVENTORY_QTY = 100000;
 
 export const EXPENSE_CATEGORIES = ['চা-নাস্তা', 'যাতায়াত', 'মালামাল ক্রয়', 'অন্যান্য'] as const;
 export const MAX_EXPENSE_TITLE_LEN = 200;
@@ -255,60 +284,10 @@ export function countDeskProgress(data: DayReportData): {
   return { deskDone, chairDone, bothDone };
 }
 
-export const LOW_STOCK_KEY_PREFIX = 'low_';
-export const SUPPLY_USED_KEY_PREFIX = 'used_';
-export const LOW_STOCK_ALERT_THRESHOLD = 75;
-export const SUPPLY_USAGE_PRESETS = [0, 25, 50, 75, 90, 100] as const;
-
-export interface SupplyUsageStatus {
-  id: string;
-  label: string;
-  usedPercent: number;
-  isRefilled: boolean;
-  isLow: boolean;
-}
-
-export function getSupplyUsedPercent(data: DayReportData, supplyId: string): number {
-  if (Boolean(data.supplies[supplyId])) {
-    return 0;
-  }
-  const raw = data.supplies[`${SUPPLY_USED_KEY_PREFIX}${supplyId}`];
-  if (typeof raw === 'number' && Number.isFinite(raw)) {
-    return Math.min(100, Math.max(0, Math.round(raw)));
-  }
-  if (Boolean(data.supplies[`${LOW_STOCK_KEY_PREFIX}${supplyId}`])) {
-    return 100;
-  }
-  return 0;
-}
-
-export function isSupplyLowStock(data: DayReportData, supplyId: string): boolean {
-  if (Boolean(data.supplies[supplyId])) {
-    return false;
-  }
-  return (
-    getSupplyUsedPercent(data, supplyId) >= LOW_STOCK_ALERT_THRESHOLD ||
-    Boolean(data.supplies[`${LOW_STOCK_KEY_PREFIX}${supplyId}`])
-  );
-}
-
-export function getSupplyUsageStatuses(data: DayReportData): SupplyUsageStatus[] {
-  return SUPPLY_ITEMS.map((item) => {
-    const isRefilled = Boolean(data.supplies[item.id]);
-    const usedPercent = getSupplyUsedPercent(data, item.id);
-    const isLow = isSupplyLowStock(data, item.id);
-    return {
-      id: item.id,
-      label: item.label,
-      usedPercent,
-      isRefilled,
-      isLow,
-    };
-  });
-}
-
-export function getLowStockSupplyItems(data: DayReportData): SupplyUsageStatus[] {
-  return getSupplyUsageStatuses(data).filter((item) => item.isLow);
+export function formatStockQty(qty: number): string {
+  if (!Number.isFinite(qty)) return '0';
+  const rounded = Math.round(qty * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : String(rounded);
 }
 
 export function getTotalExpenseAmount(data: DayReportData): number {
@@ -338,7 +317,7 @@ export function buildClosingReportText(dateStr: string, data: DayReportData): st
 
   const { bothDone } = countDeskProgress(data);
   const breakMins = getTotalBreakMinutes(data);
-  const supplyStatuses = getSupplyUsageStatuses(data).filter((s) => !s.isRefilled && s.usedPercent > 0);
+  const suppliesDoneCount = SUPPLY_ITEMS.filter((s) => Boolean(data.supplies[s.id])).length;
   const totalExpense = getTotalExpenseAmount(data);
 
   const lines = [
@@ -349,6 +328,7 @@ export function buildClosingReportText(dateStr: string, data: DayReportData): st
     `মোট বিরতি: ${formatMinutesToHM(breakMins)}`,
     `ডেস্ক ও চেয়ার ক্লিন: ${bothDone}/${TOTAL_DESKS} সম্পন্ন`,
     `বেসিক কাজ: ${doneBasic}/${BASIC_TASKS.length} সম্পন্ন`,
+    `মালামাল রিফিল: ${suppliesDoneCount}/${SUPPLY_ITEMS.length} সম্পন্ন`,
     `অফিসের খরচ: ৳${totalExpense} (${data.expenses.length}টি আইটেম)`,
     `কাজের প্রমাণ ফটো: ${data.proofs.length}টি`,
     '',
@@ -366,15 +346,6 @@ export function buildClosingReportText(dateStr: string, data: DayReportData): st
             exp.time ? ` [${exp.time}]` : ''
           }`
       )
-    );
-  }
-
-  if (supplyStatuses.length > 0) {
-    lines.push(
-      '',
-      `মালামাল স্টক অবস্থা (কত % শেষ হয়েছে): ${supplyStatuses
-        .map((s) => `${s.label} (${s.usedPercent}% শেষ${s.isLow ? ' — কিনতে হবে' : ''})`)
-        .join(', ')}`
     );
   }
 
@@ -433,15 +404,9 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
     : '<li>কোনো বিরতি যুক্ত করা হয়নি</li>';
 
   const supplyRows = SUPPLY_ITEMS.map((s) => {
-    const usedPercent = getSupplyUsedPercent(data, s.id);
-    const isLow = isSupplyLowStock(data, s.id);
     const statusHtml = data.supplies[s.id]
-      ? '<strong style="color:#047857;">রিফিল সম্পন্ন (০% শেষ)</strong>'
-      : isLow
-      ? `<strong style="color:#be123c;">${usedPercent}% শেষ — ঘাটতি (কিনতে হবে)</strong>`
-      : usedPercent > 0
-      ? `<strong style="color:#b45309;">${usedPercent}% শেষ</strong>`
-      : '<strong>বাকি / স্বাভাবিক</strong>';
+      ? '<strong style="color:#047857;">রিফিল সম্পন্ন</strong>'
+      : '<strong>বাকি</strong>';
     return `<li>${escapeHtml(s.label)}: ${statusHtml}</li>`;
   }).join('');
 

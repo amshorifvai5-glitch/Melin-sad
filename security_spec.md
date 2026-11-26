@@ -8,6 +8,7 @@
    - `daily_reports/{dateId}/expenses/{expenseId}` requires `isValidId(expenseId)`, parent existence, `dateId` matching parent path, `isPublic == true`, bounded `title`/`category`/`amount` (`0 <= amount <= 1000000`)/`note`/`receiptPhoto` (`<= 350000` chars), and server timestamps; readable publicly, writable only by `isAdmin()`.
    - `portal_settings/profile` allows only `ownerUid`, `photoDataUrl` (`<= 350000` chars), and `updatedAt == request.time`.
    - `feedback/{feedbackId}` is a write-once public drop-box: any visitor may `create` a submission with `isValidId(feedbackId)`, bounded `category`/`senderName`/`message`, forced initial `status == 'নতুন'`, empty `adminNote == ''`, and `createdAt == request.time && updatedAt == request.time`. Only `isAdmin()` may `get`, `list`, `update` (`status`, `adminNote`, `updatedAt` only), or `delete`.
+   - `inventory_items/{itemId}` requires `isValidId(itemId)`, `itemId == itemId`, `ownerUid == request.auth.uid`, `isPublic == true`, bounded `name` (`1..120`), `quantity` (`0..100000`), allowlisted `unit`, bounded `note` (`<= 300`), and server timestamps; readable publicly (`isPublic == true` for list), writable only by `isAdmin()`.
 3. **No Public PII Exposure**: Emails, phone numbers, and private feedback/complaints are never readable by non-admin visitors.
 
 ## 2. "Dirty Dozen" Attack Payloads (Expected: `PERMISSION_DENIED`)

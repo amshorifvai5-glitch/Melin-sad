@@ -56,7 +56,7 @@
         },
         "supplies": {
           "type": "object",
-          "description": "Map of supply item IDs to refill completion booleans and usage percentages."
+          "description": "Map of supply item IDs to refill completion booleans."
         },
         "notes": {
           "type": "string",
@@ -286,6 +286,64 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Persistent office stock/inventory record showing available quantity in pieces, liters, or other units.",
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Current stock quantity in the specified unit."
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["পিস", "লিটার", "বোতল", "বক্স", "রোল", "প্যাকেট", "কেজি"],
+          "maxLength": 20
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "itemId",
+        "ownerUid",
+        "isPublic",
+        "name",
+        "quantity",
+        "unit",
+        "note",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -308,6 +366,10 @@
     "/feedback/{feedbackId}": {
       "schema": { "$ref": "#/entities/FeedbackSubmission" },
       "description": "Write-once public drop-box for feedback, suggestions, and complaints; readable, updatable, and deletable only by the verified owner/admin."
+    },
+    "/inventory_items/{itemId}": {
+      "schema": { "$ref": "#/entities/InventoryItem" },
+      "description": "Publicly readable persistent stock inventory items editable only by the verified owner/admin."
     }
   }
 }

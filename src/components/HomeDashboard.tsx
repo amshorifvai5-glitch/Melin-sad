@@ -1,6 +1,6 @@
 import React from 'react';
-import { AlertTriangle, ChevronRight, FileText, MessageSquarePlus, Receipt } from 'lucide-react';
-import { DayReportData, MenuItemConfig, PageId } from '../types/report';
+import { Boxes, ChevronRight, FileText, MessageSquarePlus, Receipt } from 'lucide-react';
+import { DayReportData, InventoryItem, MenuItemConfig, PageId } from '../types/report';
 import {
   BASIC_TASKS,
   MENU_ITEMS,
@@ -10,8 +10,6 @@ import {
   countBasicWorkProgress,
   countDeskProgress,
   formatBanglaDate,
-  getLowStockSupplyItems,
-  getSupplyUsageStatuses,
   getTotalBreakMinutes,
   getTotalExpenseAmount,
 } from '../data/portalData';
@@ -20,6 +18,7 @@ import { Avatar } from './Avatar';
 interface HomeDashboardProps {
   currentDate: string;
   dayData: DayReportData;
+  inventoryItems: InventoryItem[];
   profilePhoto: string | null;
   canEdit: boolean;
   unreadFeedbackCount: number;
@@ -30,6 +29,7 @@ interface HomeDashboardProps {
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   currentDate,
   dayData,
+  inventoryItems,
   profilePhoto,
   canEdit,
   unreadFeedbackCount,
@@ -40,14 +40,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const deskProgress = countDeskProgress(dayData);
   const breakMinutes = getTotalBreakMinutes(dayData);
   const suppliesDone = SUPPLY_ITEMS.filter((s) => Boolean(dayData.supplies[s.id])).length;
-  const lowStockItems = getLowStockSupplyItems(dayData);
-  const usedSupplyItems = getSupplyUsageStatuses(dayData).filter(
-    (s) => !s.isRefilled && s.usedPercent > 0
-  );
-  const maxSupplyUsed =
-    usedSupplyItems.length > 0
-      ? Math.max(...usedSupplyItems.map((s) => s.usedPercent))
-      : 0;
   const totalExpenses = getTotalExpenseAmount(dayData);
 
   const basicPercent =
@@ -86,12 +78,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           ? `${dayData.extraBasicTasks.length}টি কাজ`
           : 'অতিরিক্ত কাজ নেই';
       case 'supplies-refill':
-        if (lowStockItems.length > 0) {
-          return `${lowStockItems.length}টি স্টক ঘাটতি`;
-        }
-        if (usedSupplyItems.length > 0) {
-          return `${usedSupplyItems.length}টি ব্যবহৃত`;
-        }
         return `${suppliesDone}/${SUPPLY_ITEMS.length}টি রিফিল`;
       case 'closing-report':
         return 'রিপোর্ট ও ডাউনলোড';
@@ -103,6 +89,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         return dayData.expenses.length > 0
           ? `৳${totalExpenses} (${dayData.expenses.length}টি)`
           : 'কোনো খরচ নেই';
+      case 'stock-inventory':
+        return inventoryItems.length > 0 ? `${inventoryItems.length}টি জিনিস মজুত` : 'তালিকা খালি';
       case 'feedback':
         return canEdit && unreadFeedbackCount > 0
           ? `${unreadFeedbackCount}টি নতুন বার্তা`
@@ -114,9 +102,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
     if (id === 'basic-work') return basicPercent;
     if (id === 'desk-chair') return deskPercent;
     if (id === 'supplies-refill') {
-      if (usedSupplyItems.length > 0) {
-        return maxSupplyUsed;
-      }
       return SUPPLY_ITEMS.length > 0
         ? Math.round((suppliesDone / SUPPLY_ITEMS.length) * 100)
         : 0;
@@ -127,81 +112,51 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const primaryGroup = MENU_ITEMS.slice(0, 6);
   const secondaryGroup = MENU_ITEMS.slice(6, 12);
   const expenseItem = MENU_ITEMS[12];
-  const feedbackItem = MENU_ITEMS[13];
+  const inventoryItem = MENU_ITEMS[13];
+  const feedbackItem = MENU_ITEMS[14];
 
   const renderMenuCard = (item: MenuItemConfig, indexNumber: number) => {
     const ratio = getProgressRatio(item.id);
     const metricText = getMetricValue(item.id);
-    const hasSupplyAlert = item.id === 'supplies-refill' && lowStockItems.length > 0;
 
     return (
       <button
         key={item.id}
         type="button"
         onClick={() => onNavigate(item.id)}
-        className={`bg-white border rounded-xl p-4 flex flex-col justify-between gap-3.5 text-left transition-colors group ${
-          hasSupplyAlert
-            ? 'border-rose-300 hover:border-rose-500'
-            : 'border-slate-200 hover:border-indigo-500'
-        }`}
+        className="bg-[#101829] border border-slate-800/90 hover:border-sky-500/60 hover:bg-[#131E33] rounded-xl p-4 flex flex-col justify-between gap-3.5 text-left transition-colors group"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <span
-              className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors mt-0.5 ${
-                hasSupplyAlert
-                  ? 'bg-rose-50 text-rose-700 group-hover:bg-rose-100'
-                  : 'bg-slate-100 group-hover:bg-indigo-50 text-slate-700 group-hover:text-indigo-700'
-              }`}
-            >
+            <span className="w-9 h-9 rounded-lg bg-[#090E1A] border border-slate-800 group-hover:bg-sky-500/15 group-hover:border-sky-500/40 text-slate-300 group-hover:text-sky-400 flex items-center justify-center shrink-0 transition-colors mt-0.5">
               {sectionIcons[item.id]}
             </span>
             <div className="min-w-0">
-              <div className="text-xs font-mono-num font-semibold text-slate-400">
+              <div className="text-xs font-mono-num font-semibold text-slate-500">
                 {String(indexNumber).padStart(2, '0')}.
               </div>
-              <div className="font-bold text-slate-900 text-sm sm:text-base group-hover:text-indigo-700 transition-colors leading-snug">
+              <div className="font-bold text-slate-100 text-sm sm:text-base group-hover:text-sky-300 transition-colors leading-snug">
                 {item.title}
               </div>
-              <div className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                {item.subtitle}
-              </div>
+              <div className="text-xs text-slate-400 mt-0.5 line-clamp-1">{item.subtitle}</div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 shrink-0 mt-1 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 shrink-0 mt-1 transition-colors" />
         </div>
 
-        <div className="space-y-1.5 pt-2 border-t border-slate-100">
+        <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
           <div className="flex items-center justify-between gap-2 text-xs">
-            <span
-              className={`font-semibold font-mono-num truncate ${
-                hasSupplyAlert
-                  ? 'text-rose-700'
-                  : item.id === 'supplies-refill' && usedSupplyItems.length > 0
-                  ? 'text-amber-700'
-                  : 'text-indigo-700'
-              }`}
-            >
-              {metricText}
-            </span>
+            <span className="font-semibold font-mono-num text-sky-400 truncate">{metricText}</span>
             {ratio !== null && (
-              <span className="font-mono-num text-slate-500 font-semibold shrink-0">
-                {item.id === 'supplies-refill' && usedSupplyItems.length > 0
-                  ? `সর্বোচ্চ ${ratio}% শেষ`
-                  : `${ratio}%`}
+              <span className="font-mono-num text-slate-400 font-semibold shrink-0">
+                {ratio}%
               </span>
             )}
           </div>
           {ratio !== null && (
-            <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-[#090E1A] rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-300 ${
-                  hasSupplyAlert
-                    ? 'bg-rose-600'
-                    : item.id === 'supplies-refill' && usedSupplyItems.length > 0
-                    ? 'bg-amber-500'
-                    : 'bg-indigo-600'
-                }`}
+                className="h-full bg-sky-500 transition-all duration-300"
                 style={{ width: `${ratio}%` }}
               />
             </div>
@@ -214,13 +169,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   return (
     <div className="space-y-7">
       {/* হিরো ওভারভিউ প্যানেল */}
-      <section className="bg-slate-900 text-white rounded-2xl overflow-hidden border border-slate-800">
+      <section className="bg-gradient-to-br from-[#0F172A] via-[#131F38] to-[#0E1726] text-white rounded-2xl overflow-hidden border border-sky-500/20 shadow-2xl shadow-slate-950/60">
         <div className="p-5 sm:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start sm:items-center gap-4 min-w-0">
             <button
               type="button"
               onClick={() => onNavigate('personal-info')}
-              className="shrink-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              className="shrink-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               title="ব্যক্তিগত তথ্য দেখুন"
             >
               <Avatar
@@ -232,11 +187,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             </button>
             <div className="min-w-0 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                <span className="font-semibold text-indigo-300">{PROFILE_INFO.department}</span>
+                <span className="font-semibold text-sky-400">{PROFILE_INFO.department}</span>
                 <span aria-hidden="true">·</span>
                 <span>দৈনিক অপারেশনস পোর্টাল</span>
                 <span aria-hidden="true">·</span>
-                <span className="font-mono-num">{formatBanglaDate(currentDate)}</span>
+                <span className="font-mono-num text-slate-300">
+                  {formatBanglaDate(currentDate)}
+                </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight text-balance">
                 দৈনিক কাজের রিপোর্ট ও কার্যক্রম
@@ -264,7 +221,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('closing-report')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
             >
               <FileText className="w-4 h-4" />
               সমাপ্তি রিপোর্ট
@@ -273,11 +230,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {/* ৪-কলাম লাইভ মেট্রিক বার */}
-        <div className="border-t border-slate-800 bg-slate-950/40 grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-800">
+        <div className="border-t border-slate-800/80 bg-[#090F1D]/70 grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/80">
           <button
             type="button"
             onClick={() => onNavigate('duty-location')}
-            className="px-5 py-4 text-left hover:bg-slate-800/60 transition-colors"
+            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
           >
             <div className="text-xs text-slate-400">ডিউটি লোকেশন</div>
             <div className="text-base sm:text-lg font-bold text-white mt-0.5">
@@ -289,7 +246,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('basic-work')}
-            className="px-5 py-4 text-left hover:bg-slate-800/60 transition-colors"
+            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
           >
             <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
               <span>বেসিক কাজ</span>
@@ -309,7 +266,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('desk-chair')}
-            className="px-5 py-4 text-left hover:bg-slate-800/60 transition-colors"
+            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
           >
             <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
               <span>ডেস্ক ও চেয়ার</span>
@@ -329,7 +286,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('attendance-time')}
-            className="px-5 py-4 text-left hover:bg-slate-800/60 transition-colors"
+            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
           >
             <div className="text-xs text-slate-400">হাজিরা ও বিরতি</div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
@@ -342,42 +299,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
       </section>
 
-      {/* মালামাল ঘাটতি সতর্কতা ব্যানার */}
-      {lowStockItems.length > 0 && (
-        <section className="bg-rose-50 border border-rose-200 rounded-xl px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3 min-w-0">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <div className="min-w-0 space-y-0.5">
-              <div className="text-xs sm:text-sm font-bold text-rose-950">
-                মালামাল ঘাটতি সতর্কতা · <span className="font-mono-num">{lowStockItems.length}</span>টি জিনিস ৭৫%+ শেষ হয়ে গেছে
-              </div>
-              <div className="text-xs text-rose-800 font-mono-num">
-                {lowStockItems.map((item) => `${item.label} (${item.usedPercent}% শেষ)`).join(' · ')}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onNavigate('supplies-refill')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center"
-          >
-            বিস্তারিত দেখুন
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </section>
-      )}
-
       {/* বিভাগ ১: প্রতিদিনের মূল কার্যক্রম (১–৬) */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-slate-900">প্রতিদিনের মূল কার্যক্রম</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-base font-bold text-white">প্রতিদিনের মূল কার্যক্রম</h2>
+            <p className="text-xs text-slate-400">
               পরিচিতি, বেসিক কাজ, ডিউটি অবস্থান, ডেস্ক ম্যাপ ও সময় হিসাব
             </p>
           </div>
-          <span className="text-xs font-mono-num text-slate-500">সেকশন ০১ – ০৬</span>
+          <span className="text-xs font-mono-num text-slate-400">সেকশন ০১ – ০৬</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -389,12 +320,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-slate-900">যাতায়াত, মালামাল ও রিপোর্ট</h2>
-            <p className="text-xs text-slate-500">
-              অফিস যাতায়াত, অতিরিক্ত দায়িত্ব, স্টক রিফিল, নোট ও কাজের প্রমাণ
+            <h2 className="text-base font-bold text-white">যাতায়াত, মালামাল ও রিপোর্ট</h2>
+            <p className="text-xs text-slate-400">
+              অফিস যাতায়াত, অতিরিক্ত দায়িত্ব, রিফিল চেকলিস্ট, নোট ও কাজের প্রমাণ
             </p>
           </div>
-          <span className="text-xs font-mono-num text-slate-500">সেকশন ০৭ – ১২</span>
+          <span className="text-xs font-mono-num text-slate-400">সেকশন ০৭ – ১২</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -402,66 +333,98 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
       </section>
 
-      {/* বিভাগ ৩: অফিসের জন্য খরচ (১৩) */}
-      {expenseItem && (
-        <section>
-          <button
-            type="button"
-            onClick={() => onNavigate(expenseItem.id)}
-            className="w-full bg-white border border-slate-200 hover:border-indigo-500 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-colors group"
-          >
-            <div className="flex items-start sm:items-center gap-4 min-w-0">
-              <span className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                <Receipt className="w-5 h-5" />
-              </span>
-              <div className="min-w-0 space-y-0.5">
-                <div className="text-xs font-mono-num font-semibold text-emerald-700">
-                  ১৩. দৈনিক খরচ ও ভাউচার · {getMetricValue(expenseItem.id)}
-                </div>
-                <div className="text-base font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
-                  {expenseItem.title}
-                </div>
-                <div className="text-xs sm:text-sm text-slate-500">
-                  {expenseItem.subtitle} — চা-নাস্তা, যাতায়াত বা অফিস সরঞ্জাম ক্রয়ের হিসাব
+      {/* বিভাগ ৩: অফিসের খরচ ও মালামাল স্টক (১৩ ও ১৪) */}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h2 className="text-base font-bold text-white">অফিস খরচ ও স্টক মজুত</h2>
+            <p className="text-xs text-slate-400">
+              দৈনিক খরচের হিসাব এবং কোন জিনিস কত পিস বা কত লিটার মজুত আছে তার তালিকা
+            </p>
+          </div>
+          <span className="text-xs font-mono-num text-slate-400">সেকশন ১৩ – ১৪</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          {expenseItem && (
+            <button
+              type="button"
+              onClick={() => onNavigate(expenseItem.id)}
+              className="bg-[#101829] border border-slate-800/90 hover:border-emerald-500/60 hover:bg-[#131E33] rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-colors group"
+            >
+              <div className="flex items-start gap-3.5 min-w-0">
+                <span className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                  <Receipt className="w-5 h-5" />
+                </span>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-mono-num font-semibold text-emerald-400">
+                    ১৩. {getMetricValue(expenseItem.id)}
+                  </div>
+                  <div className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
+                    {expenseItem.title}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    চা-নাস্তা, যাতায়াত বা অফিস সরঞ্জাম ক্রয়ের হিসাব
+                  </div>
                 </div>
               </div>
-            </div>
+              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 shrink-0 transition-colors" />
+            </button>
+          )}
 
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-100 group-hover:bg-indigo-600 text-slate-800 group-hover:text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center">
-              হিসাব দেখুন
-              <ChevronRight className="w-4 h-4" />
-            </span>
-          </button>
-        </section>
-      )}
+          {inventoryItem && (
+            <button
+              type="button"
+              onClick={() => onNavigate(inventoryItem.id)}
+              className="bg-[#101829] border border-slate-800/90 hover:border-sky-500/60 hover:bg-[#131E33] rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-colors group"
+            >
+              <div className="flex items-start gap-3.5 min-w-0">
+                <span className="w-11 h-11 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 group-hover:bg-sky-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                  <Boxes className="w-5 h-5" />
+                </span>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-mono-num font-semibold text-sky-400">
+                    ১৪. {getMetricValue(inventoryItem.id)}
+                  </div>
+                  <div className="text-base font-bold text-white group-hover:text-sky-300 transition-colors">
+                    {inventoryItem.title}
+                  </div>
+                  <div className="text-xs text-slate-400">{inventoryItem.subtitle}</div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 shrink-0 transition-colors" />
+            </button>
+          )}
+        </div>
+      </section>
 
-      {/* বিভাগ ৪: মতামত, পরামর্শ ও অভিযোগ (১৪) */}
+      {/* বিভাগ ৪: মতামত, পরামর্শ ও অভিযোগ (১৫) */}
       {feedbackItem && (
         <section>
           <button
             type="button"
             onClick={() => onNavigate(feedbackItem.id)}
-            className="w-full bg-white border border-slate-200 hover:border-indigo-500 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-colors group"
+            className="w-full bg-[#101829] border border-slate-800/90 hover:border-indigo-500/60 hover:bg-[#131E33] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-colors group"
           >
             <div className="flex items-start sm:items-center gap-4 min-w-0">
-              <span className="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+              <span className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
                 <MessageSquarePlus className="w-5 h-5" />
               </span>
               <div className="min-w-0 space-y-0.5">
-                <div className="text-xs font-mono-num font-semibold text-indigo-700">
-                  ১৪. গোপনীয় ফিডব্যাক বক্স
+                <div className="text-xs font-mono-num font-semibold text-indigo-400">
+                  ১৫. গোপনীয় ফিডব্যাক বক্স
                   {canEdit && unreadFeedbackCount > 0 ? ` · ${unreadFeedbackCount}টি নতুন বার্তা` : ''}
                 </div>
-                <div className="text-base font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                <div className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
                   {feedbackItem.title}
                 </div>
-                <div className="text-xs sm:text-sm text-slate-500">
+                <div className="text-xs sm:text-sm text-slate-400">
                   আপনার যেকোনো মতামত, কাজের পরামর্শ বা অভিযোগ সরাসরি অ্যাডমিনের কাছে পাঠান।
                 </div>
               </div>
             </div>
 
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 group-hover:bg-indigo-600 text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#090E1A] border border-slate-700 group-hover:bg-indigo-600 group-hover:border-indigo-500 text-slate-200 group-hover:text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center">
               {canEdit ? 'ইনবক্স দেখুন' : 'বার্তা পাঠান'}
               <ChevronRight className="w-4 h-4" />
             </span>

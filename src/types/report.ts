@@ -14,6 +14,7 @@ export type PageId =
   | 'notes-issues'
   | 'work-proof'
   | 'office-expenses'
+  | 'stock-inventory'
   | 'feedback';
 
 export type DutyStatus = '' | 'HQ' | 'TS' | 'HQ/TS';
@@ -41,6 +42,24 @@ export interface OfficeExpenseEntry {
   time: string;
   note: string;
   receiptPhoto?: string;
+}
+
+export type InventoryUnit =
+  | 'পিস'
+  | 'লিটার'
+  | 'বোতল'
+  | 'বক্স'
+  | 'রোল'
+  | 'প্যাকেট'
+  | 'কেজি';
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: InventoryUnit;
+  note: string;
+  updatedAtMs: number;
 }
 
 export interface BasicTaskProgress {
@@ -88,7 +107,7 @@ export interface DayReportData {
   desks: Record<number, DeskCleanState>;
   breaks: BreakEntry[];
   commutes: CommuteEntry[];
-  supplies: Record<string, boolean | number>;
+  supplies: Record<string, boolean>;
   notes: string;
   proofs: WorkProofEntry[];
   expenses: OfficeExpenseEntry[];

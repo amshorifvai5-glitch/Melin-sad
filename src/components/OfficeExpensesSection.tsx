@@ -142,14 +142,14 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#101829] border border-slate-700/80 rounded-lg text-sm font-semibold text-slate-200 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
             হোম
           </button>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">অফিসের জন্য খরচ</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-xl font-bold text-white">অফিসের জন্য খরচ</h2>
+            <p className="text-xs text-slate-400">
               {canEdit
                 ? 'অফিসের খরচ, রসিদ বা ক্যাশমেমোর ছবিসহ হিসাব লিপিবদ্ধ করুন'
                 : 'শুধুমাত্র দেখার মোড · আজকের অফিস খরচ ও রসিদ'}
@@ -157,7 +157,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
           </div>
         </div>
 
-        <div className="bg-slate-900 text-white rounded-xl px-4 py-2.5 flex items-center gap-3 shrink-0">
+        <div className="bg-[#101829] border border-emerald-500/30 rounded-xl px-4 py-2.5 flex items-center gap-3 shrink-0">
           <Receipt className="w-4 h-4 text-emerald-400 shrink-0" />
           <div>
             <div className="text-[11px] text-slate-400">আজকের মোট খরচ</div>
@@ -169,14 +169,14 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
       {canEdit && (
         <form
           onSubmit={(e) => void handleSubmit(e)}
-          className="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 space-y-4"
+          className="bg-[#101829] border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4"
         >
-          <div className="text-sm font-bold text-slate-900">নতুন খরচ যুক্ত করুন</div>
+          <div className="text-sm font-bold text-white">নতুন খরচ যুক্ত করুন</div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="expenseTitle" className="block text-xs font-semibold text-slate-700">
-                খরচের বিবরণ <span className="text-rose-600">*</span>
+              <label htmlFor="expenseTitle" className="block text-xs font-semibold text-slate-300">
+                খরচের বিবরণ <span className="text-rose-400">*</span>
               </label>
               <input
                 id="expenseTitle"
@@ -188,13 +188,13 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                   if (formError) setFormError(null);
                 }}
                 placeholder="যেমন: অফিসের চা-নাস্তা, টিস্যু বা রিকশা ভাড়া"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
+                className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="expenseAmount" className="block text-xs font-semibold text-slate-700">
-                টাকার পরিমাণ (৳) <span className="text-rose-600">*</span>
+              <label htmlFor="expenseAmount" className="block text-xs font-semibold text-slate-300">
+                টাকার পরিমাণ (৳) <span className="text-rose-400">*</span>
               </label>
               <input
                 id="expenseAmount"
@@ -208,13 +208,13 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                   if (formError) setFormError(null);
                 }}
                 placeholder="যেমন: ১৫০"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-sm font-mono-num font-bold text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
+                className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm font-mono-num font-bold text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <span className="block text-xs font-semibold text-slate-700">খরচের ধরন</span>
+            <span className="block text-xs font-semibold text-slate-300">খরচের ধরন</span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {EXPENSE_CATEGORIES.map((cat) => (
                 <button
@@ -223,8 +223,8 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                   onClick={() => setCategory(cat)}
                   className={`px-3 py-2 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap ${
                     category === cat
-                      ? 'bg-indigo-600 border-indigo-600 text-white'
-                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ? 'bg-sky-600 border-sky-500 text-white'
+                      : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
                   }`}
                 >
                   {cat}
@@ -235,7 +235,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="expenseTime" className="block text-xs font-semibold text-slate-700">
+              <label htmlFor="expenseTime" className="block text-xs font-semibold text-slate-300">
                 সময়
               </label>
               <div className="flex items-center gap-2">
@@ -244,12 +244,12 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono-num font-bold"
+                  className="flex-1 bg-[#090E1A] border border-slate-700/80 rounded-lg px-3 py-2 text-xs font-mono-num font-bold text-slate-100 [color-scheme:dark] focus:outline-none focus:border-sky-500"
                 />
                 <button
                   type="button"
                   onClick={() => setTime(getNowTimeHHMM())}
-                  className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 whitespace-nowrap shrink-0"
+                  className="px-3 py-2 rounded-lg bg-[#090E1A] border border-slate-700 hover:bg-slate-800 text-xs font-semibold text-slate-200 whitespace-nowrap shrink-0"
                 >
                   এখন
                 </button>
@@ -257,8 +257,8 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
-              <label htmlFor="expenseNote" className="block text-xs font-semibold text-slate-700">
-                মন্তব্য / ভাউচার নোট <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+              <label htmlFor="expenseNote" className="block text-xs font-semibold text-slate-300">
+                মন্তব্য / ভাউচার নোট <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
               </label>
               <input
                 id="expenseNote"
@@ -267,7 +267,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="যেমন: কার অনুমোদনে বা কোথা থেকে কেনা হয়েছে"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white"
+                className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
               />
             </div>
           </div>
@@ -277,9 +277,9 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
             <div className="flex flex-wrap items-center gap-3">
               <label
                 htmlFor="expenseReceiptInput"
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 cursor-pointer transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-700 bg-[#090E1A] hover:bg-slate-800 text-xs font-semibold text-slate-200 cursor-pointer transition-colors whitespace-nowrap"
               >
-                <ImagePlus className="w-4 h-4 text-indigo-600" />
+                <ImagePlus className="w-4 h-4 text-sky-400" />
                 {compressing
                   ? 'ছবি প্রস্তুত হচ্ছে...'
                   : receiptPhoto
@@ -300,12 +300,12 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                   <img
                     src={receiptPhoto}
                     alt="সংযুক্ত রসিদ"
-                    className="w-10 h-10 object-cover rounded-lg border border-slate-200"
+                    className="w-10 h-10 object-cover rounded-lg border border-slate-700"
                   />
                   <button
                     type="button"
                     onClick={handleClearReceipt}
-                    className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                    className="text-xs font-semibold text-rose-400 hover:text-rose-300"
                   >
                     ছবি সরান
                   </button>
@@ -316,7 +316,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
             <button
               type="submit"
               disabled={submitting || compressing}
-              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
             >
               <Plus className="w-4 h-4" />
               {submitting ? 'যুক্ত হচ্ছে...' : 'খরচ যুক্ত করুন'}
@@ -324,7 +324,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
           </div>
 
           {formError && (
-            <div className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+            <div className="text-xs font-medium text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
               {formError}
             </div>
           )}
@@ -332,7 +332,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
       )}
 
       {/* ধরন অনুযায়ী ফিল্টার */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-2">
+      <div className="bg-[#101829] border border-slate-800 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           {(['সবগুলো', ...EXPENSE_CATEGORIES] as const).map((cat) => {
             const active = filterCategory === cat;
@@ -343,8 +343,8 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                 onClick={() => setFilterCategory(cat)}
                 className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   active
-                    ? 'bg-slate-900 border-slate-900 text-white'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                    ? 'bg-sky-600 border-sky-500 text-white'
+                    : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
                 }`}
               >
                 {cat}
@@ -352,15 +352,15 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
             );
           })}
         </div>
-        <div className="text-xs font-mono-num text-slate-500">
-          মোট এন্ট্রি: <strong className="text-slate-900">{filteredExpenses.length}টি</strong>
+        <div className="text-xs font-mono-num text-slate-400">
+          মোট এন্ট্রি: <strong className="text-white">{filteredExpenses.length}টি</strong>
         </div>
       </div>
 
       {/* খরচের তালিকা */}
-      <div className="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+      <div className="bg-[#101829] border border-slate-800 rounded-xl divide-y divide-slate-800">
         {filteredExpenses.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-slate-400">
             এই তারিখে এখনো কোনো অফিস খরচ যুক্ত করা হয়নি
           </div>
         ) : (
@@ -376,7 +376,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setPreviewExpense(exp)}
-                      className="shrink-0 rounded-lg overflow-hidden border border-slate-200 hover:border-indigo-500 transition-colors"
+                      className="shrink-0 rounded-lg overflow-hidden border border-slate-700 hover:border-sky-500 transition-colors"
                       title="রসিদ বড় করে দেখুন"
                     >
                       <img
@@ -388,8 +388,8 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                   )}
 
                   <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span className="font-semibold text-indigo-700">{exp.category}</span>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                      <span className="font-semibold text-sky-400">{exp.category}</span>
                       <span aria-hidden="true">·</span>
                       <span className="font-mono-num">{exp.time || '--:--'}</span>
                       {hasReceipt && (
@@ -398,22 +398,22 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                           <button
                             type="button"
                             onClick={() => setPreviewExpense(exp)}
-                            className="font-semibold text-emerald-700 hover:underline"
+                            className="font-semibold text-emerald-400 hover:underline"
                           >
                             রসিদ দেখুন
                           </button>
                         </>
                       )}
                     </div>
-                    <div className="text-sm sm:text-base font-bold text-slate-900 break-words">
+                    <div className="text-sm sm:text-base font-bold text-white break-words">
                       {exp.title}
                     </div>
-                    {exp.note && <p className="text-xs text-slate-600 break-words">{exp.note}</p>}
+                    {exp.note && <p className="text-xs text-slate-400 break-words">{exp.note}</p>}
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                  <span className="text-base font-bold font-mono-num text-slate-900">
+                  <span className="text-base font-bold font-mono-num text-emerald-400">
                     ৳{exp.amount}
                   </span>
                   {canEdit && exp.id && (
@@ -421,7 +421,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                       type="button"
                       onClick={() => setDeleteTarget(exp)}
                       aria-label="খরচ মুছুন"
-                      className="p-1.5 rounded-lg border border-slate-200 text-rose-600 hover:bg-rose-50 transition-colors"
+                      className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -437,20 +437,20 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
       {previewExpense && previewExpense.receiptPhoto && (
         <div
           onClick={() => setPreviewExpense(null)}
-          className="fixed inset-0 bg-slate-950/75 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border border-slate-200 rounded-xl max-w-lg w-full overflow-hidden shadow-xl"
+            className="bg-[#101829] border border-slate-800 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl"
           >
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-3">
+            <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-sm font-bold text-slate-900 truncate">
+                <div className="text-sm font-bold text-white truncate">
                   {previewExpense.title}
                 </div>
-                <div className="text-xs text-slate-500 font-mono-num">
+                <div className="text-xs text-slate-400 font-mono-num">
                   {previewExpense.category} · ৳{previewExpense.amount} · {previewExpense.time}
                 </div>
               </div>
@@ -458,13 +458,13 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
                 type="button"
                 onClick={() => setPreviewExpense(null)}
                 aria-label="বন্ধ করুন"
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="bg-slate-100 p-3 flex items-center justify-center max-h-[65vh] overflow-auto">
+            <div className="bg-[#090E1A] p-3 flex items-center justify-center max-h-[65vh] overflow-auto">
               <img
                 src={previewExpense.receiptPhoto}
                 alt={previewExpense.title}
@@ -472,11 +472,11 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
               />
             </div>
 
-            <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-end gap-2">
+            <div className="px-4 py-3 border-t border-slate-800 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => handleDownloadReceipt(previewExpense)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-700 bg-[#090E1A] hover:bg-slate-800 text-xs font-semibold text-slate-200"
               >
                 <Download className="w-3.5 h-3.5" />
                 ছবি ডাউনলোড
@@ -484,7 +484,7 @@ export const OfficeExpensesSection: React.FC<OfficeExpensesSectionProps> = ({
               <button
                 type="button"
                 onClick={() => setPreviewExpense(null)}
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white"
+                className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white"
               >
                 বন্ধ করুন
               </button>
