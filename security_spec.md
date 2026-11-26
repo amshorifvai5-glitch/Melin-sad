@@ -10,7 +10,8 @@
    - `portal_settings/live_location` allows only `ownerUid`, `locationLabel` (`1..80` chars), `note` (`<= 160` chars), `isActive` (`bool`), and `updatedAt == request.time`; publicly readable (`get`), writable only by `isAdmin()`.
    - `feedback/{feedbackId}` is a write-once public drop-box: any visitor may `create` a submission with `isValidId(feedbackId)`, bounded `category`/`senderName`/`message`, forced initial `status == 'নতুন'`, empty `adminNote == ''`, and `createdAt == request.time && updatedAt == request.time`. Only `isAdmin()` may `get`, `list`, `update` (`status`, `adminNote`, `updatedAt` only), or `delete`.
    - `inventory_items/{itemId}` requires `isValidId(itemId)`, `itemId == itemId`, `ownerUid == request.auth.uid`, `isPublic == true`, bounded `name` (`1..120`), `quantity` (`0..100000`), allowlisted `unit`, bounded `note` (`<= 300`), and server timestamps; readable publicly (`isPublic == true` for list), writable only by `isAdmin()`.
-3. **No Public PII Exposure**: Emails, phone numbers, and private feedback/complaints are never readable by non-admin visitors.
+   - `site_visits/{visitId}` is an anonymous presence & view counter (no PII): any visitor may `create` with `isValidId(visitId)`, `visitId == dateId + '_' + visitorToken` / matching field `visitId`, bounded `deviceType` (`['মোবাইল', 'ডেস্কটপ']`), bounded `activePage` (`1..40`), initial `viewsCount == 1`, and `createdAt == request.time && lastSeenAt == request.time`. Visitors may `update` only `activePage`, `viewsCount` (non-decreasing, max `+1` per update up to `1000`), and `lastSeenAt == request.time`, with immutable `visitId`/`dateId`/`visitorToken`/`deviceType`/`createdAt`. Only `isAdmin()` may `get`, `list`, or `delete`.
+3. **No Public PII Exposure**: Emails, phone numbers, visitor analytics, and private feedback/complaints are never readable by non-admin visitors.
 
 ## 2. "Dirty Dozen" Attack Payloads (Expected: `PERMISSION_DENIED`)
 1. Unauthenticated `create` on `/daily_reports/2026-11-25` -> Rejected (`!isAdmin()`).
@@ -23,5 +24,5 @@
 8. Admin `create` with invalid `dateId` path (`"../../etc/passwd"` or `"invalid"`) -> Rejected (`isValidDateId(dateId)`).
 9. Admin `update` with `dutyStatus: "INVALID_SITE"` -> Rejected (`dutyStatus in ['', 'HQ', 'TS', 'HQ/TS']`).
 10. Admin `update` with > 5000 char `notes` string -> Rejected (`notes.size() <= 5000`).
-11. Non-admin `list` or `get` on `/feedback` or `/feedback/{id}`, or `create` on `/feedback` with `status: "সমাধান হয়েছে"` or > 2000 char `message` -> Rejected (`!isAdmin()` for reads; initial state & size guards on create).
+11. Non-admin `list` or `get` on `/feedback` or `/site_visits`, or `create` on `/site_visits` with `viewsCount: 999999` or shadow field -> Rejected (`!isAdmin()` for reads; bounded `viewsCount == 1` & `hasOnly` on create).
 12. Unauthenticated `list` on `/admins` or catch-all `/unknown/doc` -> Rejected (default deny).

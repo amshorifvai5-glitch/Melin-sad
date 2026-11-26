@@ -3,6 +3,8 @@ import {
   collection,
   deleteDoc,
   doc,
+  increment,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -22,6 +24,7 @@ import {
   InventoryUnit,
   LiveLocationStatus,
   OfficeExpenseEntry,
+  SiteVisitEntry,
   WorkProofEntry,
 } from '../types/report';
 import {
@@ -670,5 +673,153 @@ export async function saveLiveLocationToCloud(
     }
   } catch (error) {
     handleFirestoreError(error, docExists ? OperationType.UPDATE : OperationType.CREATE, path);
+  }
+}
+
+const VISITOR_TOKEN_KEY = 'sa_visitor_token_v1';
+const VISITOR_DATE_KEY = 'sa_visit_registered_date_v1';
+
+function getOrCreateVisitorToken(): string {
+  try {
+    const existingToken = localStorage.getItem(VISITOR_TOKEN_KEY);
+    if (existingToken && /^[a-zA-Z0-9_-]{8,64}$/.test(existingToken)) {
+      return existingToken;
+    }
+    const generated = `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    const clean = generated.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+    localStorage.setItem(VISITOR_TOKEN_KEY, clean);
+    return clean;
+  } catch {
+    return `v_${Math.random().toString(36).slice(2, 12)}`;
+  }
+}
+
+function detectDeviceType(): 'মোবাইল' | 'ডেস্কটপ' {
+  if (typeof navigator === 'undefined') return 'ডেস্কটপ';
+  const ua = navigator.userAgent || '';
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua)) {
+    return 'মোবাইল';
+  }
+  if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+    return 'মোবাইল';
+  }
+  return 'ডেস্কটপ';
+}
+
+export async function recordSiteVisitHeartbeat(
+  dateId: string,
+  activePage: string,
+  countOpen: boolean
+): Promise<void> {
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dateId)) return;
+  const visitorToken = getOrCreateVisitorToken();
+  const visitId = `${dateId}_${visitorToken}`;
+  const path = `site_visits/${visitId}`;
+  const docRef = doc(db, 'site_visits', visitId);
+  const cleanPage = String(activePage || 'home').slice(0, 40) || 'home';
+  const deviceType = detectDeviceType();
+
+  let alreadyRegisteredToday = false;
+  try {
+    alreadyRegisteredToday = localStorage.getItem(VISITOR_DATE_KEY) === dateId;
+  } catch {
+    alreadyRegisteredToday = false;
+  }
+
+  const createFreshVisit = async () => {
+    await setDoc(docRef, {
+      visitId,
+      dateId,
+      visitorToken,
+      deviceType,
+      activePage: cleanPage,
+      viewsCount: 1,
+      createdAt: serverTimestamp(),
+      lastSeenAt: serverTimestamp(),
+    });
+    try {
+      localStorage.setItem(VISITOR_DATE_KEY, dateId);
+    } catch {
+      // ignore storage failure
+    }
+  };
+
+  if (!alreadyRegisteredToday) {
+    try {
+      await createFreshVisit();
+      return;
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (code === 'already-exists' || code === 'permission-denied') {
+        // Fallback to update if doc already existed
+      } else {
+        handleFirestoreError(error, OperationType.CREATE, path);
+      }
+    }
+  }
+
+  try {
+    await updateDoc(docRef, {
+      activePage: cleanPage,
+      ...(countOpen ? { viewsCount: increment(1) } : {}),
+      lastSeenAt: serverTimestamp(),
+    });
+  } catch (error) {
+    const code = (error as { code?: string })?.code;
+    if (code === 'not-found') {
+      try {
+        await createFreshVisit();
+      } catch (createErr) {
+        handleFirestoreError(createErr, OperationType.CREATE, path);
+      }
+      return;
+    }
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+export function subscribeToSiteVisits(
+  onItems: (items: SiteVisitEntry[]) => void,
+  onError?: (err: unknown) => void
+): () => void {
+  const path = 'site_visits';
+  const q = query(collection(db, 'site_visits'), orderBy('lastSeenAt', 'desc'), limit(500));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items: SiteVisitEntry[] = snapshot.docs.map((d) => {
+        const raw = d.data();
+        const createdAtMs = raw.createdAt instanceof Timestamp ? raw.createdAt.toMillis() : 0;
+        const lastSeenAtMs = raw.lastSeenAt instanceof Timestamp ? raw.lastSeenAt.toMillis() : 0;
+        return {
+          id: d.id,
+          dateId: String(raw.dateId || ''),
+          visitorToken: String(raw.visitorToken || ''),
+          deviceType: raw.deviceType === 'মোবাইল' ? 'মোবাইল' : 'ডেস্কটপ',
+          activePage: String(raw.activePage || 'home'),
+          viewsCount:
+            typeof raw.viewsCount === 'number' && Number.isFinite(raw.viewsCount)
+              ? Math.max(1, raw.viewsCount)
+              : 1,
+          createdAtMs,
+          lastSeenAtMs,
+        };
+      });
+      onItems(items);
+    },
+    (error) => {
+      onError?.(error);
+      handleFirestoreError(error, OperationType.LIST, path);
+    }
+  );
+}
+
+export async function deleteSiteVisitFromCloud(visitId: string): Promise<void> {
+  const path = `site_visits/${visitId}`;
+  try {
+    await deleteDoc(doc(db, 'site_visits', visitId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

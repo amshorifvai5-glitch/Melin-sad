@@ -15,7 +15,8 @@ export type PageId =
   | 'work-proof'
   | 'office-expenses'
   | 'stock-inventory'
-  | 'feedback';
+  | 'feedback'
+  | 'visitor-analytics';
 
 export type DutyStatus = '' | 'HQ' | 'TS' | 'HQ/TS';
 
@@ -67,6 +68,17 @@ export interface LiveLocationStatus {
   note: string;
   isActive: boolean;
   updatedAtMs: number;
+}
+
+export interface SiteVisitEntry {
+  id: string;
+  dateId: string;
+  visitorToken: string;
+  deviceType: 'মোবাইল' | 'ডেস্কটপ';
+  activePage: string;
+  viewsCount: number;
+  createdAtMs: number;
+  lastSeenAtMs: number;
 }
 
 export interface BasicTaskProgress {

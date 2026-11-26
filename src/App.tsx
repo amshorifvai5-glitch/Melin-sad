@@ -21,6 +21,7 @@ import {
   Package,
   Receipt,
   Sparkles,
+  Users,
   X,
 } from 'lucide-react';
 import { User, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
@@ -36,6 +37,7 @@ import {
   MenuItemConfig,
   OfficeExpenseEntry,
   PageId,
+  SiteVisitEntry,
   WorkProofEntry,
 } from './types/report';
 import {
@@ -63,8 +65,11 @@ import {
   deleteFeedbackFromCloud,
   deleteInventoryItemFromCloud,
   deleteOfficeExpenseFromCloud,
+  deleteSiteVisitFromCloud,
   deleteWorkProofFromCloud,
+  recordSiteVisitHeartbeat,
   saveDailyReportToCloud,
+  saveLiveLocationToCloud,
   saveProfilePhotoToCloud,
   submitFeedbackToCloud,
   subscribeToDailyReport,
@@ -72,9 +77,9 @@ import {
   subscribeToInventoryItems,
   subscribeToLiveLocation,
   subscribeToProfilePhoto,
+  subscribeToSiteVisits,
   updateFeedbackInCloud,
   updateInventoryItemInCloud,
-  saveLiveLocationToCloud,
 } from './services/reportSync';
 import { Avatar } from './components/Avatar';
 import { BasicWorkSection } from './components/BasicWorkSection';
@@ -86,6 +91,7 @@ import { OfficeExpensesSection } from './components/OfficeExpensesSection';
 import { OpeningIntro } from './components/OpeningIntro';
 import { OfflineIndicator, PWAInstallButton } from './components/PWAInstallControls';
 import { StockInventorySection } from './components/StockInventorySection';
+import { VisitorAnalyticsSection } from './components/VisitorAnalyticsSection';
 import {
   AttendanceTimeSection,
   BreakTimeSection,
@@ -116,6 +122,7 @@ const SECTION_ICONS: Record<MenuItemConfig['id'], React.ReactNode> = {
   'office-expenses': <Receipt className="w-4 h-4" />,
   'stock-inventory': <Boxes className="w-4 h-4" />,
   feedback: <MessageSquarePlus className="w-4 h-4" />,
+  'visitor-analytics': <Users className="w-4 h-4" />,
 };
 
 const VALID_PAGE_IDS = new Set<string>([
@@ -162,6 +169,8 @@ export default function App() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [liveLocation, setLiveLocation] = useState<LiveLocationStatus | null>(null);
   const [liveLocationExists, setLiveLocationExists] = useState(false);
+  const [siteVisits, setSiteVisits] = useState<SiteVisitEntry[]>([]);
+  const [nowTickMs, setNowTickMs] = useState<number>(() => Date.now());
   const [showOpening, setShowOpening] = useState(true);
 
   const reportDocExistsRef = useRef(false);
@@ -172,6 +181,7 @@ export default function App() {
 
   const notesDebounceRef = useRef<number | null>(null);
   const navDepthRef = useRef<number>(0);
+  const visitSessionCountedRef = useRef<boolean>(false);
 
   const canEdit = authReady && isOwnerAdmin(currentUser);
 
@@ -275,13 +285,54 @@ export default function App() {
   useEffect(() => {
     if (!canEdit) {
       setFeedbackItems([]);
+      setSiteVisits([]);
       return;
     }
-    const unsubscribe = subscribeToFeedbackInbox((items) => {
+    const unsubscribeFeedback = subscribeToFeedbackInbox((items) => {
       setFeedbackItems(items);
     });
-    return () => unsubscribe();
+    const unsubscribeVisits = subscribeToSiteVisits((items) => {
+      setSiteVisits(items);
+      setNowTickMs(Date.now());
+    });
+    const clockTimer = window.setInterval(() => {
+      setNowTickMs(Date.now());
+    }, 15000);
+    return () => {
+      unsubscribeFeedback();
+      unsubscribeVisits();
+      window.clearInterval(clockTimer);
+    };
   }, [canEdit]);
+
+  useEffect(() => {
+    if (authReady && !canEdit && activePage === 'visitor-analytics') {
+      setActivePage('home');
+      window.history.replaceState({ page: 'home', depth: 0 }, '', buildHashUrl('home'));
+      navDepthRef.current = 0;
+    }
+  }, [authReady, canEdit, activePage]);
+
+  /* ভিজিটর উপস্থিতি ও পেজ ভিউ হার্টবিট */
+  useEffect(() => {
+    const todayDate = getTodayIsoDate();
+    const shouldCountOpen = !visitSessionCountedRef.current;
+    visitSessionCountedRef.current = true;
+
+    void recordSiteVisitHeartbeat(todayDate, activePage, shouldCountOpen).catch(() => {
+      // ignore transient network errors on background presence ping
+    });
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void recordSiteVisitHeartbeat(getTodayIsoDate(), activePage, false).catch(() => {
+          // ignore transient network errors
+        });
+      }
+    }, 45000);
+
+    return () => window.clearInterval(intervalId);
+  }, [activePage]);
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -525,6 +576,12 @@ export default function App() {
     showToast('বার্তাটি মুছে ফেলা হয়েছে');
   };
 
+  const handleDeleteSiteVisit = async (visitId: string) => {
+    if (!canEdit) return;
+    await deleteSiteVisitFromCloud(visitId);
+    showToast('ভিজিট রেকর্ড মুছে ফেলা হয়েছে');
+  };
+
   const hasLocalDraft = (() => {
     if (!canEdit || reportDocExists) return false;
     const local = getLocalDayData(currentDate);
@@ -564,6 +621,11 @@ export default function App() {
 
   const unreadFeedbackCount = feedbackItems.filter((item) => item.status === 'নতুন').length;
   const totalExpenses = getTotalExpenseAmount(dayData);
+  const todayIso = getTodayIsoDate();
+  const liveViewerCount = siteVisits.filter(
+    (v) => v.lastSeenAtMs > 0 && nowTickMs - v.lastSeenAtMs <= 2 * 60 * 1000
+  ).length;
+  const todayVisitorCount = siteVisits.filter((v) => v.dateId === todayIso).length;
 
   const getSectionBadgeText = (id: MenuItemConfig['id']): string | null => {
     switch (id) {
@@ -591,6 +653,8 @@ export default function App() {
         return inventoryItems.length > 0 ? `${inventoryItems.length}টি` : null;
       case 'feedback':
         return canEdit && unreadFeedbackCount > 0 ? `${unreadFeedbackCount} নতুন` : null;
+      case 'visitor-analytics':
+        return canEdit && liveViewerCount > 0 ? `লাইভ ${liveViewerCount}` : null;
       default:
         return null;
     }
@@ -688,7 +752,7 @@ export default function App() {
 
           <div className="border-t border-neutral-800 my-2.5" />
 
-          {MENU_ITEMS.map((item, idx) => {
+          {MENU_ITEMS.filter((item) => canEdit || item.id !== 'visitor-analytics').map((item, idx) => {
             const isActive =
               activePage === item.id ||
               (activePage === 'emergency-contact' && item.id === 'personal-info');
@@ -913,6 +977,8 @@ export default function App() {
                   profilePhoto={profilePhoto}
                   canEdit={canEdit}
                   unreadFeedbackCount={unreadFeedbackCount}
+                  liveViewerCount={liveViewerCount}
+                  todayVisitorCount={todayVisitorCount}
                   sectionIcons={SECTION_ICONS}
                   onNavigate={navigateTo}
                 />
@@ -1065,6 +1131,17 @@ export default function App() {
                   onSubmitFeedback={handleSubmitFeedback}
                   onUpdateFeedback={handleUpdateFeedback}
                   onDeleteFeedback={handleDeleteFeedback}
+                  onBack={() => handleGoBack('home')}
+                />
+              )}
+
+              {activePage === 'visitor-analytics' && canEdit && (
+                <VisitorAnalyticsSection
+                  visits={siteVisits}
+                  canEdit={canEdit}
+                  authLoading={authLoading || !authReady}
+                  onAdminSignIn={() => void handleAdminSignIn()}
+                  onDeleteVisit={handleDeleteSiteVisit}
                   onBack={() => handleGoBack('home')}
                 />
               )}

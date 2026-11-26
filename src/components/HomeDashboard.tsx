@@ -1,5 +1,5 @@
 import React from 'react';
-import { Boxes, ChevronRight, FileText, MessageSquarePlus, Receipt } from 'lucide-react';
+import { Boxes, ChevronRight, FileText, MessageSquarePlus, Receipt, Users } from 'lucide-react';
 import { DayReportData, InventoryItem, MenuItemConfig, PageId } from '../types/report';
 import {
   BASIC_TASKS,
@@ -22,6 +22,8 @@ interface HomeDashboardProps {
   profilePhoto: string | null;
   canEdit: boolean;
   unreadFeedbackCount: number;
+  liveViewerCount: number;
+  todayVisitorCount: number;
   sectionIcons: Record<MenuItemConfig['id'], React.ReactNode>;
   onNavigate: (page: PageId) => void;
 }
@@ -33,6 +35,8 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   profilePhoto,
   canEdit,
   unreadFeedbackCount,
+  liveViewerCount,
+  todayVisitorCount,
   sectionIcons,
   onNavigate,
 }) => {
@@ -95,6 +99,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         return canEdit && unreadFeedbackCount > 0
           ? `${unreadFeedbackCount}টি নতুন বার্তা`
           : 'গোপনীয় বার্তা পাঠান';
+      case 'visitor-analytics':
+        return canEdit
+          ? `লাইভ ${liveViewerCount} জন · আজ ${todayVisitorCount} জন`
+          : 'অ্যাডমিন ভিউ';
     }
   };
 
@@ -114,6 +122,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const expenseItem = MENU_ITEMS[12];
   const inventoryItem = MENU_ITEMS[13];
   const feedbackItem = MENU_ITEMS[14];
+  const visitorAnalyticsItem = MENU_ITEMS[15];
 
   const renderMenuCard = (item: MenuItemConfig, indexNumber: number) => {
     const ratio = getProgressRatio(item.id);
@@ -400,37 +409,65 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
       </section>
 
-      {/* বিভাগ ৪: মতামত, পরামর্শ ও অভিযোগ (১৫) */}
-      {feedbackItem && (
-        <section>
-          <button
-            type="button"
-            onClick={() => onNavigate(feedbackItem.id)}
-            className="w-full bg-white border border-neutral-200 hover:border-[#0A2E6D] shadow-xs hover:shadow-md rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-all group"
-          >
-            <div className="flex items-start sm:items-center gap-4 min-w-0">
-              <span className="w-11 h-11 rounded-xl bg-[#0A2E6D]/10 border border-[#0A2E6D]/20 text-[#0A2E6D] group-hover:bg-[#0A2E6D] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                <MessageSquarePlus className="w-5 h-5" />
-              </span>
-              <div className="min-w-0 space-y-0.5">
-                <div className="text-xs font-mono-num font-semibold text-[#0A2E6D]">
-                  ১৫. গোপনীয় ফিডব্যাক বক্স
-                  {canEdit && unreadFeedbackCount > 0 ? ` · ${unreadFeedbackCount}টি নতুন বার্তা` : ''}
-                </div>
-                <div className="text-base font-bold text-neutral-900 group-hover:text-[#0A2E6D] transition-colors">
-                  {feedbackItem.title}
-                </div>
-                <div className="text-xs sm:text-sm text-neutral-500">
-                  আপনার যেকোনো মতামত, কাজের পরামর্শ বা অভিযোগ সরাসরি অ্যাডমিনের কাছে পাঠান।
+      {/* বিভাগ ৪: মতামত, পরামর্শ ও (অ্যাডমিনের জন্য) ভিজিটর হিসাব */}
+      {(feedbackItem || (canEdit && visitorAnalyticsItem)) && (
+        <section
+          className={`grid grid-cols-1 gap-3.5 ${
+            canEdit && visitorAnalyticsItem ? 'md:grid-cols-2' : ''
+          }`}
+        >
+          {feedbackItem && (
+            <button
+              type="button"
+              onClick={() => onNavigate(feedbackItem.id)}
+              className="bg-white border border-neutral-200 hover:border-[#0A2E6D] shadow-xs hover:shadow-md rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-all group"
+            >
+              <div className="flex items-start gap-3.5 min-w-0">
+                <span className="w-11 h-11 rounded-xl bg-[#0A2E6D]/10 border border-[#0A2E6D]/20 text-[#0A2E6D] group-hover:bg-[#0A2E6D] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                  <MessageSquarePlus className="w-5 h-5" />
+                </span>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-mono-num font-semibold text-[#0A2E6D]">
+                    ১৫. গোপনীয় ফিডব্যাক বক্স
+                    {canEdit && unreadFeedbackCount > 0 ? ` · ${unreadFeedbackCount}টি নতুন বার্তা` : ''}
+                  </div>
+                  <div className="text-base font-bold text-neutral-900 group-hover:text-[#0A2E6D] transition-colors leading-snug">
+                    {feedbackItem.title}
+                  </div>
+                  <div className="text-xs text-neutral-500">
+                    আপনার মতামত, কাজের পরামর্শ বা অভিযোগ সরাসরি অ্যাডমিনকে পাঠান
+                  </div>
                 </div>
               </div>
-            </div>
+              <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#0A2E6D] shrink-0 transition-colors" />
+            </button>
+          )}
 
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0B0B0D] group-hover:bg-[#F26522] text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center">
-              {canEdit ? 'ইনবক্স দেখুন' : 'বার্তা পাঠান'}
-              <ChevronRight className="w-4 h-4" />
-            </span>
-          </button>
+          {canEdit && visitorAnalyticsItem && (
+            <button
+              type="button"
+              onClick={() => onNavigate(visitorAnalyticsItem.id)}
+              className="bg-[#0B0B0D] text-white border border-neutral-800 hover:border-[#F26522] shadow-xs hover:shadow-md rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-all group"
+            >
+              <div className="flex items-start gap-3.5 min-w-0">
+                <span className="w-11 h-11 rounded-xl bg-[#F26522]/15 border border-[#F26522]/40 text-[#F26522] group-hover:bg-[#F26522] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                  <Users className="w-5 h-5" />
+                </span>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-mono-num font-semibold text-[#F26522]">
+                    ১৬. {getMetricValue(visitorAnalyticsItem.id)}
+                  </div>
+                  <div className="text-base font-bold text-white group-hover:text-[#F26522] transition-colors leading-snug">
+                    {visitorAnalyticsItem.title}
+                  </div>
+                  <div className="text-xs text-neutral-400">
+                    {visitorAnalyticsItem.subtitle}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-neutral-500 group-hover:text-[#F26522] shrink-0 transition-colors" />
+            </button>
+          )}
         </section>
       )}
     </div>

@@ -79,6 +79,11 @@ export const MENU_ITEMS: MenuItemConfig[] = [
     title: 'আপনার মতামত, পরামর্শ কিংবা আপনার অভিযোগ জানান',
     subtitle: 'মতামত, পরামর্শ বা অভিযোগ সরাসরি পাঠান',
   },
+  {
+    id: 'visitor-analytics',
+    title: 'ভিজিটর ও লাইভ ভিউ',
+    subtitle: 'কতজন দেখছেন, আজকের ও মোট ভিজিটর হিসাব',
+  },
 ];
 
 export const INVENTORY_UNITS = [

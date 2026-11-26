@@ -191,6 +191,30 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function isValidSiteVisit(data, visitId) {
+      return data.keys().hasAll([
+          'visitId', 'dateId', 'visitorToken', 'deviceType',
+          'activePage', 'viewsCount', 'createdAt', 'lastSeenAt'
+        ])
+        && data.keys().hasOnly([
+          'visitId', 'dateId', 'visitorToken', 'deviceType',
+          'activePage', 'viewsCount', 'createdAt', 'lastSeenAt'
+        ])
+        && data.visitId is string && data.visitId == visitId
+        && data.dateId is string && isValidDateId(data.dateId)
+        && data.visitorToken is string
+        && data.visitorToken.size() >= 8 && data.visitorToken.size() <= 64
+        && data.visitorToken.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.visitId == data.dateId + '_' + data.visitorToken
+        && data.deviceType is string && data.deviceType.size() <= 20
+        && data.deviceType in ['মোবাইল', 'ডেস্কটপ']
+        && data.activePage is string
+        && data.activePage.size() >= 1 && data.activePage.size() <= 40
+        && data.viewsCount is number && data.viewsCount >= 1 && data.viewsCount <= 1000
+        && data.createdAt is timestamp
+        && data.lastSeenAt is timestamp;
+    }
+
     // Connection check document
     match /test/connection {
       allow get: if true;
@@ -376,6 +400,34 @@ service cloud.firestore {
         ]);
 
       allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    // Anonymous daily visitor presence & page view counter (no PII): admin-only analytics reads
+    match /site_visits/{visitId} {
+      allow get: if isAdmin() && isValidId(visitId);
+      allow list: if isAdmin();
+
+      allow create: if isValidId(visitId)
+        && isValidSiteVisit(incoming(), visitId)
+        && incoming().viewsCount == 1
+        && incoming().createdAt == request.time
+        && incoming().lastSeenAt == request.time;
+
+      allow update: if isValidId(visitId)
+        && isValidSiteVisit(incoming(), visitId)
+        && incoming().visitId == existing().visitId
+        && incoming().dateId == existing().dateId
+        && incoming().visitorToken == existing().visitorToken
+        && incoming().deviceType == existing().deviceType
+        && incoming().createdAt == existing().createdAt
+        && incoming().lastSeenAt == request.time
+        && incoming().viewsCount >= existing().viewsCount
+        && incoming().viewsCount <= existing().viewsCount + 1
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'activePage', 'viewsCount', 'lastSeenAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(visitId);
     }
   }
 }
