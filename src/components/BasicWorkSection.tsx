@@ -137,14 +137,14 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#101829] border border-slate-700/80 rounded-lg text-sm font-semibold text-slate-200 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50 shadow-xs transition-colors whitespace-nowrap shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
             হোম
           </button>
           <div>
-            <h2 className="text-xl font-bold text-white">দৈনিক বেসিক কাজ</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-xl font-bold text-neutral-900">দৈনিক বেসিক কাজ</h2>
+            <p className="text-xs text-neutral-500">
               {canEdit
                 ? 'কাজে টিক দিন এবং পাশের ঘরে শেষ করার সময় সংরক্ষণ করুন'
                 : 'শুধুমাত্র দেখার মোড · সম্পন্ন কাজের তালিকা ও সময়'}
@@ -155,7 +155,7 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
         <div className="flex items-center gap-3">
           <span
             className={`text-sm font-semibold font-mono-num ${
-              total > 0 && done === total ? 'text-emerald-400' : 'text-sky-400'
+              total > 0 && done === total ? 'text-emerald-600' : 'text-[#F26522]'
             }`}
           >
             {done}/{total} সম্পন্ন
@@ -164,7 +164,7 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
             <button
               type="button"
               onClick={() => setConfirmResetOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               রিসেট
@@ -173,10 +173,10 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
         </div>
       </div>
 
-      <div className="bg-[#101829] border border-slate-800 rounded-xl p-4 sm:p-5 space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <h3 className="text-sm font-bold text-white">আজকের সম্পন্ন কাজের বিবরণ</h3>
-          <span className="text-xs text-slate-400 font-mono-num">মোট ২১টি রুটিন কাজ</span>
+      <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 space-y-5 shadow-xs">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+          <h3 className="text-sm font-bold text-neutral-900">আজকের সম্পন্ন কাজের বিবরণ</h3>
+          <span className="text-xs text-neutral-500 font-mono-num">মোট ২১টি রুটিন কাজ</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -187,8 +187,8 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                 key={task.id}
                 className={`p-3 rounded-lg border transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
                   entry.done
-                    ? 'bg-emerald-500/10 border-emerald-500/40'
-                    : 'bg-[#090E1A] border-slate-800'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : 'bg-[#F9FAFB] border-neutral-200'
                 }`}
               >
                 <label
@@ -201,10 +201,10 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                     disabled={!canEdit}
                     checked={entry.done}
                     onChange={(e) => handleToggleBasic(task.id, e.target.checked)}
-                    className="w-4 h-4 mt-0.5 sm:mt-0 accent-emerald-500 rounded shrink-0 disabled:opacity-80"
+                    className="w-4 h-4 mt-0.5 sm:mt-0 accent-emerald-600 rounded shrink-0 disabled:opacity-80"
                   />
-                  <span className="text-sm font-semibold leading-snug text-slate-100">
-                    <span className="text-sky-400 font-mono-num mr-1.5">{idx + 1}.</span>
+                  <span className="text-sm font-semibold leading-snug text-neutral-900">
+                    <span className="text-[#F26522] font-mono-num mr-1.5">{idx + 1}.</span>
                     {task.text}
                   </span>
                 </label>
@@ -217,18 +217,18 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                         value={entry.time}
                         onChange={(e) => handleSetBasicTime(task.id, e.target.value)}
                         aria-label={`${task.text} সময়`}
-                        className="bg-[#101829] border border-slate-700/80 rounded-md px-2 py-1 text-xs font-mono-num font-semibold text-slate-100 [color-scheme:dark] focus:outline-none focus:border-sky-500"
+                        className="bg-white border border-neutral-200 rounded-md px-2 py-1 text-xs font-mono-num font-semibold text-neutral-900 [color-scheme:light] focus:outline-none focus:border-[#F26522]"
                       />
                       <button
                         type="button"
                         onClick={() => handleSetBasicNow(task.id)}
-                        className="px-2.5 py-1 rounded-md bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 text-xs font-semibold border border-sky-500/30 transition-colors whitespace-nowrap shrink-0"
+                        className="px-2.5 py-1 rounded-md bg-orange-50 hover:bg-orange-100 text-[#F26522] text-xs font-semibold border border-orange-200 transition-colors whitespace-nowrap shrink-0"
                       >
                         এখন
                       </button>
                     </>
                   ) : (
-                    <span className="text-xs font-mono-num font-semibold text-slate-400">
+                    <span className="text-xs font-mono-num font-semibold text-neutral-500">
                       {entry.time || (entry.done ? 'সম্পন্ন' : 'বাকি')}
                     </span>
                   )}
@@ -239,8 +239,8 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
         </div>
 
         {(canEdit || data.extraBasicTasks.length > 0) && (
-          <div className="pt-4 border-t border-slate-800 space-y-3">
-            <h4 className="text-sm font-bold text-white">অতিরিক্ত কাজ</h4>
+          <div className="pt-4 border-t border-neutral-100 space-y-3">
+            <h4 className="text-sm font-bold text-neutral-900">অতিরিক্ত কাজ</h4>
 
             {canEdit && (
               <div className="flex flex-col sm:flex-row gap-2">
@@ -252,7 +252,7 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                     if (e.key === 'Enter') handleAddExtra();
                   }}
                   placeholder="অতিরিক্ত কাজের বিবরণ লিখুন..."
-                  className="flex-1 bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+                  className="flex-1 bg-[#F9FAFB] border border-neutral-200 rounded-lg px-3.5 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
                 />
                 <div className="flex items-center gap-2">
                   <input
@@ -260,19 +260,19 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                     value={extraTime}
                     onChange={(e) => setExtraTime(e.target.value)}
                     aria-label="অতিরিক্ত কাজের সময়"
-                    className="bg-[#090E1A] border border-slate-700/80 rounded-lg px-2.5 py-2 text-xs font-mono-num font-semibold text-slate-100 [color-scheme:dark] focus:outline-none focus:border-sky-500"
+                    className="bg-[#F9FAFB] border border-neutral-200 rounded-lg px-2.5 py-2 text-xs font-mono-num font-semibold text-neutral-900 [color-scheme:light] focus:bg-white focus:outline-none focus:border-[#F26522]"
                   />
                   <button
                     type="button"
                     onClick={() => setExtraTime(getNowTimeHHMM())}
-                    className="px-3 py-2 rounded-lg bg-[#090E1A] hover:bg-slate-800 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors whitespace-nowrap shrink-0"
+                    className="px-3 py-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold border border-neutral-200 transition-colors whitespace-nowrap shrink-0"
                   >
                     এখন
                   </button>
                   <button
                     type="button"
                     onClick={handleAddExtra}
-                    className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                    className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-[#F26522] hover:bg-[#DC5214] text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     যুক্ত করুন
@@ -288,8 +288,8 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                     key={`${item.text}-${idx}`}
                     className={`p-3 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
                       item.done
-                        ? 'bg-sky-500/10 border-sky-500/40'
-                        : 'bg-[#090E1A] border-slate-800'
+                        ? 'bg-orange-50 border-orange-200'
+                        : 'bg-[#F9FAFB] border-neutral-200'
                     }`}
                   >
                     <label
@@ -302,10 +302,10 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                         disabled={!canEdit}
                         checked={item.done}
                         onChange={(e) => handleToggleExtra(idx, e.target.checked)}
-                        className="w-4 h-4 mt-0.5 sm:mt-0 accent-sky-500 rounded shrink-0"
+                        className="w-4 h-4 mt-0.5 sm:mt-0 accent-[#F26522] rounded shrink-0"
                       />
-                      <span className="text-sm font-semibold text-slate-100 break-words">
-                        <span className="text-sky-400 font-mono-num mr-1.5">
+                      <span className="text-sm font-semibold text-neutral-900 break-words">
+                        <span className="text-[#F26522] font-mono-num mr-1.5">
                           অতিরিক্ত {idx + 1}.
                         </span>
                         {item.text}
@@ -318,19 +318,19 @@ export const BasicWorkSection: React.FC<BasicWorkSectionProps> = ({
                             type="time"
                             value={item.time}
                             onChange={(e) => handleSetExtraTime(idx, e.target.value)}
-                            className="bg-[#101829] border border-slate-700/80 rounded-md px-2 py-1 text-xs font-mono-num font-semibold text-slate-100 [color-scheme:dark] focus:outline-none focus:border-sky-500"
+                            className="bg-white border border-neutral-200 rounded-md px-2 py-1 text-xs font-mono-num font-semibold text-neutral-900 [color-scheme:light] focus:outline-none focus:border-[#F26522]"
                           />
                           <button
                             type="button"
                             onClick={() => handleDeleteExtra(idx)}
                             aria-label="অতিরিক্ত কাজ মুছুন"
-                            className="p-1.5 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors"
+                            className="p-1.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </>
                       ) : (
-                        <span className="text-xs font-mono-num font-semibold text-slate-400">
+                        <span className="text-xs font-mono-num font-semibold text-neutral-500">
                           {item.time || '--:--'}
                         </span>
                       )}

@@ -35,15 +35,15 @@ interface FeedbackSectionProps {
 }
 
 const CATEGORY_STYLE: Record<FeedbackCategory, string> = {
-  মতামত: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-  পরামর্শ: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
-  অভিযোগ: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  মতামত: 'bg-sky-50 text-sky-700 border-sky-200',
+  পরামর্শ: 'bg-indigo-50 text-[#0A2E6D] border-indigo-200',
+  অভিযোগ: 'bg-rose-50 text-rose-700 border-rose-200',
 };
 
 const STATUS_STYLE: Record<FeedbackStatus, string> = {
-  নতুন: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  'দেখা হয়েছে': 'bg-slate-800 text-slate-300 border-slate-700',
-  'সমাধান হয়েছে': 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  নতুন: 'bg-amber-50 text-amber-800 border-amber-200',
+  'দেখা হয়েছে': 'bg-neutral-100 text-neutral-700 border-neutral-200',
+  'সমাধান হয়েছে': 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
 
 function formatSubmissionDateTime(ms: number): string {
@@ -156,30 +156,30 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#101829] border border-slate-700/80 rounded-lg text-sm font-semibold text-slate-200 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50 shadow-xs transition-colors whitespace-nowrap shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
             হোম
           </button>
           <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl font-bold text-white">
+            <h2 className="text-lg sm:text-xl font-bold text-neutral-900">
               আপনার মতামত, পরামর্শ কিংবা আপনার অভিযোগ জানান
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-neutral-500">
               সরাসরি মতামত, কাজের পরামর্শ বা অভিযোগ পাঠানোর গোপনীয় বক্স
             </p>
           </div>
         </div>
 
         {canEdit && (
-          <div className="flex items-center gap-1.5 bg-[#101829] border border-slate-800 rounded-lg p-1 shrink-0">
+          <div className="flex items-center gap-1.5 bg-white border border-neutral-200 rounded-lg p-1 shrink-0 shadow-xs">
             <button
               type="button"
               onClick={() => setAdminTab('inbox')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                 activeTab === 'inbox'
-                  ? 'bg-sky-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-800'
+                  ? 'bg-[#F26522] text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100'
               }`}
             >
               <Inbox className="w-3.5 h-3.5" />
@@ -190,8 +190,8 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               onClick={() => setAdminTab('form')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                 activeTab === 'form'
-                  ? 'bg-sky-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-800'
+                  ? 'bg-[#F26522] text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100'
               }`}
             >
               <MessageSquarePlus className="w-3.5 h-3.5" />
@@ -203,9 +203,9 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
 
       {/* ভিজিটর / নতুন বার্তা জমা দেওয়ার ফর্ম */}
       {activeTab === 'form' && (
-        <div className="bg-[#101829] border border-slate-800 rounded-xl p-5 sm:p-6 space-y-5">
-          <div className="flex items-start gap-3 bg-[#090E1A] border border-slate-800 rounded-lg px-4 py-3 text-xs sm:text-sm text-slate-300">
-            <Lock className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+        <div className="bg-white border border-neutral-200 rounded-xl p-5 sm:p-6 space-y-5 shadow-xs">
+          <div className="flex items-start gap-3 bg-[#F9FAFB] border border-neutral-200 rounded-lg px-4 py-3 text-xs sm:text-sm text-neutral-600">
+            <Lock className="w-4 h-4 text-[#F26522] shrink-0 mt-0.5" />
             <div>
               আপনার পাঠানো মতামত, পরামর্শ বা অভিযোগ সরাসরি অ্যাডমিনের কাছে গোপনীয়ভাবে পৌঁছাবে। অন্য কোনো ভিজিটর আপনার বার্তা দেখতে পারবেন না।
             </div>
@@ -228,29 +228,29 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 অভিযোগ: {
                   title: 'আমি আন্তরিকভাবে দুঃখিত',
                   body: 'আপনার এই অসুবিধার জন্য আমি আন্তরিকভাবে দুঃখিত। আপনার অভিযোগটি গুরুত্বসহকারে গ্রহণ করা হয়েছে এবং দ্রুত সমাধানের ব্যবস্থা নেওয়া হবে।',
-                  boxClass: 'bg-amber-500/10 border-amber-500/30',
-                  iconClass: 'bg-amber-500/20 text-amber-300',
-                  titleClass: 'text-amber-200',
-                  bodyClass: 'text-amber-100/90',
-                  btnClass: 'bg-amber-600 hover:bg-amber-500',
+                  boxClass: 'bg-amber-50 border-amber-200',
+                  iconClass: 'bg-amber-100 text-amber-700',
+                  titleClass: 'text-amber-900',
+                  bodyClass: 'text-amber-800',
+                  btnClass: 'bg-amber-600 hover:bg-amber-700',
                 },
                 মতামত: {
                   title: 'আপনার মূল্যবান মতামতের জন্য আন্তরিক ধন্যবাদ',
                   body: 'আপনার মতামতটি সফলভাবে অ্যাডমিনের কাছে পৌঁছেছে। কাজের মান আরও উন্নত করতে আপনার এই মূল্যবান ভাবনা আমরা সাদরে বিবেচনা করব।',
-                  boxClass: 'bg-sky-500/10 border-sky-500/30',
-                  iconClass: 'bg-sky-500/20 text-sky-300',
-                  titleClass: 'text-sky-200',
-                  bodyClass: 'text-sky-100/90',
-                  btnClass: 'bg-sky-600 hover:bg-sky-500',
+                  boxClass: 'bg-orange-50 border-orange-200',
+                  iconClass: 'bg-orange-100 text-[#F26522]',
+                  titleClass: 'text-neutral-900',
+                  bodyClass: 'text-neutral-700',
+                  btnClass: 'bg-[#F26522] hover:bg-[#DC5214]',
                 },
                 পরামর্শ: {
                   title: 'আপনার সুন্দর পরামর্শের জন্য আন্তরিক ধন্যবাদ',
                   body: 'আপনার গঠনমূলক পরামর্শটি গুরুত্বসহকারে গ্রহণ করা হয়েছে। কাজ আরও সুন্দর ও সহজ করতে আপনার এই পরামর্শ আমাদের সাহায্য করবে।',
-                  boxClass: 'bg-emerald-500/10 border-emerald-500/30',
-                  iconClass: 'bg-emerald-500/20 text-emerald-300',
-                  titleClass: 'text-emerald-200',
-                  bodyClass: 'text-emerald-100/90',
-                  btnClass: 'bg-emerald-600 hover:bg-emerald-500',
+                  boxClass: 'bg-emerald-50 border-emerald-200',
+                  iconClass: 'bg-emerald-100 text-emerald-700',
+                  titleClass: 'text-emerald-900',
+                  bodyClass: 'text-emerald-800',
+                  btnClass: 'bg-emerald-600 hover:bg-emerald-700',
                 },
               };
               const cfg = responseMap[submittedCategory];
@@ -284,7 +284,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
             <form onSubmit={(e) => void handleFormSubmit(e)} className="space-y-4">
               {/* ধরন নির্বাচন */}
               <div className="space-y-2">
-                <label className="block text-xs sm:text-sm font-bold text-slate-200">
+                <label className="block text-xs sm:text-sm font-bold text-neutral-800">
                   বিষয়ের ধরন নির্বাচন করুন
                 </label>
                 <div className="grid grid-cols-3 gap-2.5">
@@ -297,8 +297,8 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                         onClick={() => setCategory(cat)}
                         className={`px-3 py-2.5 rounded-lg border text-xs sm:text-sm font-bold transition-colors whitespace-nowrap ${
                           selected
-                            ? 'bg-sky-600 border-sky-500 text-white'
-                            : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
+                            ? 'bg-[#F26522] border-[#F26522] text-white'
+                            : 'bg-[#F9FAFB] border-neutral-200 text-neutral-700 hover:bg-neutral-100'
                         }`}
                       >
                         {cat}
@@ -313,11 +313,11 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <label
                     htmlFor="feedbackSenderName"
-                    className="block text-xs sm:text-sm font-bold text-slate-200"
+                    className="block text-xs sm:text-sm font-bold text-neutral-800"
                   >
-                    আপনার নাম বা ডেস্ক নং <span className="font-normal text-slate-400">(ঐচ্ছিক)</span>
+                    আপনার নাম বা ডেস্ক নং <span className="font-normal text-neutral-400">(ঐচ্ছিক)</span>
                   </label>
-                  <span className="text-[11px] font-mono-num text-slate-400">
+                  <span className="text-[11px] font-mono-num text-neutral-400">
                     {senderName.length}/{MAX_FEEDBACK_SENDER_LEN}
                   </span>
                 </div>
@@ -328,7 +328,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
                   placeholder="যেমন: ডেস্ক ১২ বা আপনার নাম (গোপন রাখতে চাইলে খালি রাখুন)"
-                  className="w-full px-3.5 py-2.5 bg-[#090E1A] border border-slate-700/80 rounded-lg text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+                  className="w-full px-3.5 py-2.5 bg-[#F9FAFB] border border-neutral-200 rounded-lg text-sm text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
                 />
               </div>
 
@@ -337,11 +337,11 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <label
                     htmlFor="feedbackMessage"
-                    className="block text-xs sm:text-sm font-bold text-slate-200"
+                    className="block text-xs sm:text-sm font-bold text-neutral-800"
                   >
-                    বিস্তারিত {category} লিখুন <span className="text-rose-400">*</span>
+                    বিস্তারিত {category} লিখুন <span className="text-rose-500">*</span>
                   </label>
-                  <span className="text-[11px] font-mono-num text-slate-400">
+                  <span className="text-[11px] font-mono-num text-neutral-400">
                     {message.length}/{MAX_FEEDBACK_MESSAGE_LEN}
                   </span>
                 </div>
@@ -355,12 +355,12 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                     if (submitError) setSubmitError(null);
                   }}
                   placeholder={`এখানে আপনার ${category} বিস্তারিত লিখুন...`}
-                  className="w-full px-3.5 py-2.5 bg-[#090E1A] border border-slate-700/80 rounded-lg text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500 resize-y"
+                  className="w-full px-3.5 py-2.5 bg-[#F9FAFB] border border-neutral-200 rounded-lg text-sm text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522] resize-y"
                 />
               </div>
 
               {submitError && (
-                <div className="text-xs sm:text-sm font-medium text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3.5 py-2.5">
+                <div className="text-xs sm:text-sm font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3.5 py-2.5">
                   {submitError}
                 </div>
               )}
@@ -369,7 +369,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] disabled:opacity-60 text-white text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
                 >
                   <Send className="w-4 h-4" />
                   {submitting ? 'পাঠানো হচ্ছে...' : 'বার্তা পাঠান'}
@@ -384,7 +384,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
       {canEdit && activeTab === 'inbox' && (
         <div className="space-y-4">
           {/* ফিল্টার ও স্ট্যাটাস */}
-          <div className="bg-[#101829] border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-white border border-neutral-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
             <div className="flex flex-wrap items-center gap-1.5">
               {(['সবগুলো', ...FEEDBACK_CATEGORIES] as const).map((cat) => {
                 const active = categoryFilter === cat;
@@ -399,8 +399,8 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                     onClick={() => setCategoryFilter(cat)}
                     className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                       active
-                        ? 'bg-sky-600 border-sky-500 text-white'
-                        : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
+                        ? 'bg-[#F26522] border-[#F26522] text-white'
+                        : 'bg-[#F9FAFB] border-neutral-200 text-neutral-700 hover:bg-neutral-100'
                     }`}
                   >
                     {cat} (<span className="font-mono-num">{count}</span>)
@@ -409,13 +409,13 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               })}
             </div>
 
-            <div className="text-xs font-semibold text-slate-400 font-mono-num">
-              নতুন অপঠিত: <span className="text-amber-400 font-bold">{unreadCount}টি</span>
+            <div className="text-xs font-semibold text-neutral-500 font-mono-num">
+              নতুন অপঠিত: <span className="text-[#F26522] font-bold">{unreadCount}টি</span>
             </div>
           </div>
 
           {filteredItems.length === 0 ? (
-            <div className="bg-[#101829] border border-slate-800 rounded-xl p-8 text-center text-sm text-slate-400">
+            <div className="bg-white border border-neutral-200 rounded-xl p-8 text-center text-sm text-neutral-500 shadow-xs">
               এই বিভাগে এখনো কোনো মতামত, পরামর্শ বা অভিযোগ জমা পড়েনি।
             </div>
           ) : (
@@ -427,7 +427,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 return (
                   <div
                     key={item.id}
-                    className="bg-[#101829] border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3"
+                    className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 space-y-3 shadow-xs"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
@@ -445,13 +445,13 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                         >
                           {item.status}
                         </span>
-                        <span className="text-xs font-semibold text-slate-200">
+                        <span className="text-xs font-semibold text-neutral-700">
                           {item.senderName ? item.senderName : 'নাম প্রকাশে অনিচ্ছুক'}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono-num text-slate-400">
+                        <span className="text-[11px] font-mono-num text-neutral-400">
                           {formatSubmissionDateTime(item.createdAtMs)}
                         </span>
                         <button
@@ -459,14 +459,14 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                           disabled={isBusy}
                           onClick={() => setDeleteTarget(item)}
                           aria-label="বার্তা মুছুন"
-                          className="p-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 disabled:opacity-50 transition-colors"
+                          className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 disabled:opacity-50 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    <p className="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed bg-[#090E1A] border border-slate-800 rounded-lg p-3">
+                    <p className="text-sm text-neutral-800 whitespace-pre-wrap leading-relaxed bg-[#F9FAFB] border border-neutral-200 rounded-lg p-3">
                       {item.message}
                     </p>
 
@@ -480,8 +480,8 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                             onClick={() => void handleStatusChange(item, st)}
                             className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                               item.status === st
-                                ? 'bg-sky-600 border-sky-500 text-white'
-                                : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
+                                ? 'bg-[#F26522] border-[#F26522] text-white'
+                                : 'bg-[#F9FAFB] border-neutral-200 text-neutral-700 hover:bg-neutral-100'
                             }`}
                           >
                             {st}
@@ -501,13 +501,13 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                             }))
                           }
                           placeholder="অ্যাডমিন নোট (ঐচ্ছিক)..."
-                          className="flex-1 min-w-0 px-3 py-1.5 bg-[#090E1A] border border-slate-700/80 rounded-lg text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+                          className="flex-1 min-w-0 px-3 py-1.5 bg-[#F9FAFB] border border-neutral-200 rounded-lg text-xs text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
                         />
                         <button
                           type="button"
                           disabled={isBusy}
                           onClick={() => void handleSaveAdminNote(item)}
-                          className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                          className="px-3 py-1.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
                         >
                           নোট সেভ
                         </button>

@@ -124,39 +124,41 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         key={item.id}
         type="button"
         onClick={() => onNavigate(item.id)}
-        className="bg-[#101829] border border-slate-800/90 hover:border-sky-500/60 hover:bg-[#131E33] rounded-xl p-4 flex flex-col justify-between gap-3.5 text-left transition-colors group"
+        className="bg-white border border-neutral-200 hover:border-[#F26522] shadow-xs hover:shadow-md rounded-xl p-4 flex flex-col justify-between gap-3.5 text-left transition-all group"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <span className="w-9 h-9 rounded-lg bg-[#090E1A] border border-slate-800 group-hover:bg-sky-500/15 group-hover:border-sky-500/40 text-slate-300 group-hover:text-sky-400 flex items-center justify-center shrink-0 transition-colors mt-0.5">
+            <span className="w-9 h-9 rounded-lg bg-neutral-100 border border-neutral-200 group-hover:bg-orange-50 group-hover:border-[#F26522]/40 text-neutral-700 group-hover:text-[#F26522] flex items-center justify-center shrink-0 transition-colors mt-0.5">
               {sectionIcons[item.id]}
             </span>
             <div className="min-w-0">
-              <div className="text-xs font-mono-num font-semibold text-slate-500">
+              <div className="text-xs font-mono-num font-semibold text-neutral-400">
                 {String(indexNumber).padStart(2, '0')}.
               </div>
-              <div className="font-bold text-slate-100 text-sm sm:text-base group-hover:text-sky-300 transition-colors leading-snug">
+              <div className="font-bold text-neutral-900 text-sm sm:text-base group-hover:text-[#F26522] transition-colors leading-snug">
                 {item.title}
               </div>
-              <div className="text-xs text-slate-400 mt-0.5 line-clamp-1">{item.subtitle}</div>
+              <div className="text-xs text-neutral-500 mt-0.5 line-clamp-1">{item.subtitle}</div>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 shrink-0 mt-1 transition-colors" />
+          <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#F26522] shrink-0 mt-1 transition-colors" />
         </div>
 
-        <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+        <div className="space-y-1.5 pt-2 border-t border-neutral-100">
           <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="font-semibold font-mono-num text-sky-400 truncate">{metricText}</span>
+            <span className="font-semibold font-mono-num text-[#F26522] truncate">
+              {metricText}
+            </span>
             {ratio !== null && (
-              <span className="font-mono-num text-slate-400 font-semibold shrink-0">
+              <span className="font-mono-num text-neutral-500 font-semibold shrink-0">
                 {ratio}%
               </span>
             )}
           </div>
           {ratio !== null && (
-            <div className="w-full h-1 bg-[#090E1A] rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-neutral-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-sky-500 transition-all duration-300"
+                className="h-full bg-[#F26522] transition-all duration-300"
                 style={{ width: `${ratio}%` }}
               />
             </div>
@@ -169,13 +171,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   return (
     <div className="space-y-7">
       {/* হিরো ওভারভিউ প্যানেল */}
-      <section className="bg-gradient-to-br from-[#0F172A] via-[#131F38] to-[#0E1726] text-white rounded-2xl overflow-hidden border border-sky-500/20 shadow-2xl shadow-slate-950/60">
+      <section className="bg-gradient-to-r from-[#0B0B0D] via-[#14151B] to-[#0A2558] text-white rounded-2xl overflow-hidden border border-[#F26522]/30 shadow-lg">
         <div className="p-5 sm:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start sm:items-center gap-4 min-w-0">
             <button
               type="button"
               onClick={() => onNavigate('personal-info')}
-              className="shrink-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+              className="shrink-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F26522]"
               title="ব্যক্তিগত তথ্য দেখুন"
             >
               <Avatar
@@ -186,19 +188,19 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
               />
             </button>
             <div className="min-w-0 space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                <span className="font-semibold text-sky-400">{PROFILE_INFO.department}</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-300">
+                <span className="font-semibold text-[#F26522]">{PROFILE_INFO.department}</span>
                 <span aria-hidden="true">·</span>
                 <span>দৈনিক অপারেশনস পোর্টাল</span>
                 <span aria-hidden="true">·</span>
-                <span className="font-mono-num text-slate-300">
+                <span className="font-mono-num text-neutral-300">
                   {formatBanglaDate(currentDate)}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight text-balance">
                 দৈনিক কাজের রিপোর্ট ও কার্যক্রম
               </h1>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-300">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-neutral-300">
                 <span className="font-semibold text-white">{PROFILE_INFO.displayNameBn}</span>
                 <span aria-hidden="true">·</span>
                 <span className="font-mono-num">ID: {PROFILE_INFO.employeeId}</span>
@@ -212,7 +214,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
             <div className="text-left sm:text-right">
-              <div className="text-xs text-slate-400">আজকের সার্বিক অগ্রগতি</div>
+              <div className="text-xs text-neutral-400">আজকের সার্বিক অগ্রগতি</div>
               <div className="text-2xl font-bold font-mono-num text-white">
                 {overallPercent}%
               </div>
@@ -221,7 +223,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigate('closing-report')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] text-white text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
             >
               <FileText className="w-4 h-4" />
               সমাপ্তি রিপোর্ট
@@ -230,32 +232,32 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
         </div>
 
         {/* ৪-কলাম লাইভ মেট্রিক বার */}
-        <div className="border-t border-slate-800/80 bg-[#090F1D]/70 grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/80">
+        <div className="border-t border-white/10 bg-black/45 grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/10">
           <button
             type="button"
             onClick={() => onNavigate('duty-location')}
-            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
+            className="px-5 py-4 text-left hover:bg-white/5 transition-colors"
           >
-            <div className="text-xs text-slate-400">ডিউটি লোকেশন</div>
+            <div className="text-xs text-neutral-400">ডিউটি লোকেশন</div>
             <div className="text-base sm:text-lg font-bold text-white mt-0.5">
               {dayData.dutyStatus || 'নির্ধারিত নয়'}
             </div>
-            <div className="text-[11px] text-slate-400 mt-1">পরিবর্তন করতে ক্লিক করুন</div>
+            <div className="text-[11px] text-neutral-400 mt-1">পরিবর্তন করতে ক্লিক করুন</div>
           </button>
 
           <button
             type="button"
             onClick={() => onNavigate('basic-work')}
-            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
+            className="px-5 py-4 text-left hover:bg-white/5 transition-colors"
           >
-            <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
+            <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
               <span>বেসিক কাজ</span>
               <span className="font-mono-num text-emerald-400 font-semibold">{basicPercent}%</span>
             </div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
               {basicProgress.done}/{basicProgress.total}
             </div>
-            <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
+            <div className="w-full h-1 bg-white/15 rounded-full overflow-hidden mt-2">
               <div
                 className="h-full bg-emerald-400 transition-all duration-300"
                 style={{ width: `${basicPercent}%` }}
@@ -266,18 +268,18 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('desk-chair')}
-            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
+            className="px-5 py-4 text-left hover:bg-white/5 transition-colors"
           >
-            <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
+            <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
               <span>ডেস্ক ও চেয়ার</span>
-              <span className="font-mono-num text-sky-400 font-semibold">{deskPercent}%</span>
+              <span className="font-mono-num text-[#F26522] font-semibold">{deskPercent}%</span>
             </div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
               {deskProgress.bothDone}/{TOTAL_DESKS}
             </div>
-            <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
+            <div className="w-full h-1 bg-white/15 rounded-full overflow-hidden mt-2">
               <div
-                className="h-full bg-sky-400 transition-all duration-300"
+                className="h-full bg-[#F26522] transition-all duration-300"
                 style={{ width: `${deskPercent}%` }}
               />
             </div>
@@ -286,13 +288,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <button
             type="button"
             onClick={() => onNavigate('attendance-time')}
-            className="px-5 py-4 text-left hover:bg-slate-800/40 transition-colors"
+            className="px-5 py-4 text-left hover:bg-white/5 transition-colors"
           >
-            <div className="text-xs text-slate-400">হাজিরা ও বিরতি</div>
+            <div className="text-xs text-neutral-400">হাজিরা ও বিরতি</div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
               {dayData.inTime || '--:--'} – {dayData.outTime || '--:--'}
             </div>
-            <div className="text-[11px] font-mono-num text-slate-400 mt-1">
+            <div className="text-[11px] font-mono-num text-neutral-400 mt-1">
               মোট বিরতি: {breakMinutes} মিনিট · প্রমাণ: {dayData.proofs.length}টি
             </div>
           </button>
@@ -303,12 +305,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-white">প্রতিদিনের মূল কার্যক্রম</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-base font-bold text-neutral-900">প্রতিদিনের মূল কার্যক্রম</h2>
+            <p className="text-xs text-neutral-500">
               পরিচিতি, বেসিক কাজ, ডিউটি অবস্থান, ডেস্ক ম্যাপ ও সময় হিসাব
             </p>
           </div>
-          <span className="text-xs font-mono-num text-slate-400">সেকশন ০১ – ০৬</span>
+          <span className="text-xs font-mono-num font-semibold text-neutral-500">সেকশন ০১ – ০৬</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -320,12 +322,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-white">যাতায়াত, মালামাল ও রিপোর্ট</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-base font-bold text-neutral-900">যাতায়াত, মালামাল ও রিপোর্ট</h2>
+            <p className="text-xs text-neutral-500">
               অফিস যাতায়াত, অতিরিক্ত দায়িত্ব, রিফিল চেকলিস্ট, নোট ও কাজের প্রমাণ
             </p>
           </div>
-          <span className="text-xs font-mono-num text-slate-400">সেকশন ০৭ – ১২</span>
+          <span className="text-xs font-mono-num font-semibold text-neutral-500">সেকশন ০৭ – ১২</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -337,12 +339,12 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-white">অফিস খরচ ও স্টক মজুত</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-base font-bold text-neutral-900">অফিস খরচ ও স্টক মজুত</h2>
+            <p className="text-xs text-neutral-500">
               দৈনিক খরচের হিসাব এবং কোন জিনিস কত পিস বা কত লিটার মজুত আছে তার তালিকা
             </p>
           </div>
-          <span className="text-xs font-mono-num text-slate-400">সেকশন ১৩ – ১৪</span>
+          <span className="text-xs font-mono-num font-semibold text-neutral-500">সেকশন ১৩ – ১৪</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -350,25 +352,25 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigate(expenseItem.id)}
-              className="bg-[#101829] border border-slate-800/90 hover:border-emerald-500/60 hover:bg-[#131E33] rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-colors group"
+              className="bg-white border border-neutral-200 hover:border-emerald-500 shadow-xs hover:shadow-md rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-all group"
             >
               <div className="flex items-start gap-3.5 min-w-0">
-                <span className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                <span className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
                   <Receipt className="w-5 h-5" />
                 </span>
                 <div className="min-w-0 space-y-0.5">
-                  <div className="text-xs font-mono-num font-semibold text-emerald-400">
+                  <div className="text-xs font-mono-num font-semibold text-emerald-600">
                     ১৩. {getMetricValue(expenseItem.id)}
                   </div>
-                  <div className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
+                  <div className="text-base font-bold text-neutral-900 group-hover:text-emerald-700 transition-colors">
                     {expenseItem.title}
                   </div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-neutral-500">
                     চা-নাস্তা, যাতায়াত বা অফিস সরঞ্জাম ক্রয়ের হিসাব
                   </div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 shrink-0 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-emerald-600 shrink-0 transition-colors" />
             </button>
           )}
 
@@ -376,23 +378,23 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             <button
               type="button"
               onClick={() => onNavigate(inventoryItem.id)}
-              className="bg-[#101829] border border-slate-800/90 hover:border-sky-500/60 hover:bg-[#131E33] rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-colors group"
+              className="bg-white border border-neutral-200 hover:border-[#F26522] shadow-xs hover:shadow-md rounded-xl p-5 flex items-center justify-between gap-4 text-left transition-all group"
             >
               <div className="flex items-start gap-3.5 min-w-0">
-                <span className="w-11 h-11 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 group-hover:bg-sky-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+                <span className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-200 text-[#F26522] group-hover:bg-[#F26522] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
                   <Boxes className="w-5 h-5" />
                 </span>
                 <div className="min-w-0 space-y-0.5">
-                  <div className="text-xs font-mono-num font-semibold text-sky-400">
+                  <div className="text-xs font-mono-num font-semibold text-[#F26522]">
                     ১৪. {getMetricValue(inventoryItem.id)}
                   </div>
-                  <div className="text-base font-bold text-white group-hover:text-sky-300 transition-colors">
+                  <div className="text-base font-bold text-neutral-900 group-hover:text-[#F26522] transition-colors">
                     {inventoryItem.title}
                   </div>
-                  <div className="text-xs text-slate-400">{inventoryItem.subtitle}</div>
+                  <div className="text-xs text-neutral-500">{inventoryItem.subtitle}</div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 shrink-0 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-[#F26522] shrink-0 transition-colors" />
             </button>
           )}
         </div>
@@ -404,27 +406,27 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <button
             type="button"
             onClick={() => onNavigate(feedbackItem.id)}
-            className="w-full bg-[#101829] border border-slate-800/90 hover:border-indigo-500/60 hover:bg-[#131E33] rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-colors group"
+            className="w-full bg-white border border-neutral-200 hover:border-[#0A2E6D] shadow-xs hover:shadow-md rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left transition-all group"
           >
             <div className="flex items-start sm:items-center gap-4 min-w-0">
-              <span className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
+              <span className="w-11 h-11 rounded-xl bg-[#0A2E6D]/10 border border-[#0A2E6D]/20 text-[#0A2E6D] group-hover:bg-[#0A2E6D] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
                 <MessageSquarePlus className="w-5 h-5" />
               </span>
               <div className="min-w-0 space-y-0.5">
-                <div className="text-xs font-mono-num font-semibold text-indigo-400">
+                <div className="text-xs font-mono-num font-semibold text-[#0A2E6D]">
                   ১৫. গোপনীয় ফিডব্যাক বক্স
                   {canEdit && unreadFeedbackCount > 0 ? ` · ${unreadFeedbackCount}টি নতুন বার্তা` : ''}
                 </div>
-                <div className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
+                <div className="text-base font-bold text-neutral-900 group-hover:text-[#0A2E6D] transition-colors">
                   {feedbackItem.title}
                 </div>
-                <div className="text-xs sm:text-sm text-slate-400">
+                <div className="text-xs sm:text-sm text-neutral-500">
                   আপনার যেকোনো মতামত, কাজের পরামর্শ বা অভিযোগ সরাসরি অ্যাডমিনের কাছে পাঠান।
                 </div>
               </div>
             </div>
 
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#090E1A] border border-slate-700 group-hover:bg-indigo-600 group-hover:border-indigo-500 text-slate-200 group-hover:text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center">
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0B0B0D] group-hover:bg-[#F26522] text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 self-start sm:self-center">
               {canEdit ? 'ইনবক্স দেখুন' : 'বার্তা পাঠান'}
               <ChevronRight className="w-4 h-4" />
             </span>

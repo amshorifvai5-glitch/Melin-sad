@@ -29,7 +29,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   return (
     <div
       aria-label={alt}
-      className={`${sizeClass} ${roundedClass} bg-indigo-700 text-white font-semibold flex items-center justify-center tracking-tight select-none shrink-0`}
+      className={`${sizeClass} ${roundedClass} bg-[#F26522] text-white font-semibold flex items-center justify-center tracking-tight select-none shrink-0`}
     >
       {initials}
     </div>

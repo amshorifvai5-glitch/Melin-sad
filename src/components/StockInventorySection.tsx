@@ -189,14 +189,14 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#101829] border border-slate-700/80 rounded-lg text-sm font-semibold text-slate-200 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50 shadow-xs transition-colors whitespace-nowrap shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
             হোম
           </button>
           <div>
-            <h2 className="text-xl font-bold text-white">মালামাল স্টক ও মজুত</h2>
-            <p className="text-xs text-slate-400">
+            <h2 className="text-xl font-bold text-neutral-900">মালামাল স্টক ও মজুত</h2>
+            <p className="text-xs text-neutral-500">
               {canEdit
                 ? 'আপনার কাছে কোন জিনিস কত পিস বা কত লিটার আছে তা যুক্ত ও আপডেট করুন'
                 : 'শুধুমাত্র দেখার মোড · বর্তমান মজুত তালিকা (পিস / লিটার)'}
@@ -204,10 +204,10 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
           </div>
         </div>
 
-        <div className="bg-[#101829] border border-sky-500/30 rounded-xl px-4 py-2.5 flex items-center gap-3 shrink-0">
-          <Boxes className="w-4 h-4 text-sky-400 shrink-0" />
+        <div className="bg-[#0B0B0D] border border-neutral-800 rounded-xl px-4 py-2.5 flex items-center gap-3 shrink-0 shadow-xs">
+          <Boxes className="w-4 h-4 text-[#F26522] shrink-0" />
           <div>
-            <div className="text-[11px] text-slate-400">মোট সংরক্ষিত আইটেম</div>
+            <div className="text-[11px] text-neutral-400">মোট সংরক্ষিত আইটেম</div>
             <div className="text-base font-bold font-mono-num text-white">
               {items.length}টি জিনিস
             </div>
@@ -219,10 +219,10 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
       {canEdit && (
         <form
           onSubmit={(e) => void handleAddSubmit(e)}
-          className="bg-[#101829] border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4"
+          className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-5 space-y-4 shadow-xs"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-sm font-bold text-white">নতুন স্টক আইটেম যুক্ত করুন</div>
+            <div className="text-sm font-bold text-neutral-900">নতুন স্টক আইটেম যুক্ত করুন</div>
             <div className="flex flex-wrap items-center gap-1.5">
               {INVENTORY_QUICK_SUGGESTIONS.map((s) => (
                 <button
@@ -233,7 +233,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                     setUnit(s.unit);
                     if (formError) setFormError(null);
                   }}
-                  className="px-2.5 py-1 rounded-md bg-[#0B1222] border border-slate-700/80 hover:border-sky-500/60 text-[11px] font-medium text-slate-300 hover:text-white transition-colors whitespace-nowrap"
+                  className="px-2.5 py-1 rounded-md bg-[#F9FAFB] border border-neutral-200 hover:border-[#F26522] text-[11px] font-medium text-neutral-700 hover:text-[#F26522] transition-colors whitespace-nowrap"
                 >
                   + {s.name}
                 </button>
@@ -243,8 +243,8 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2 space-y-1.5">
-              <label htmlFor="invName" className="block text-xs font-semibold text-slate-300">
-                জিনিসের নাম <span className="text-rose-400">*</span>
+              <label htmlFor="invName" className="block text-xs font-semibold text-neutral-700">
+                জিনিসের নাম <span className="text-rose-500">*</span>
               </label>
               <input
                 id="invName"
@@ -256,13 +256,13 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                   if (formError) setFormError(null);
                 }}
                 placeholder="যেমন: হ্যান্ডওয়াশ, টিস্যু রোল, ডিশওয়াশ লিকুইড..."
-                className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+                className="w-full bg-[#F9FAFB] border border-neutral-200 rounded-lg px-3.5 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="invQty" className="block text-xs font-semibold text-slate-300">
-                বর্তমান পরিমাণ <span className="text-rose-400">*</span>
+              <label htmlFor="invQty" className="block text-xs font-semibold text-neutral-700">
+                বর্তমান পরিমাণ <span className="text-rose-500">*</span>
               </label>
               <input
                 id="invQty"
@@ -276,13 +276,13 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                   if (formError) setFormError(null);
                 }}
                 placeholder="যেমন: ৫ বা ২.৫"
-                className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm font-mono-num font-bold text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+                className="w-full bg-[#F9FAFB] border border-neutral-200 rounded-lg px-3.5 py-2 text-sm font-mono-num font-bold text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <span className="block text-xs font-semibold text-slate-300">একক (Unit)</span>
+            <span className="block text-xs font-semibold text-neutral-700">একক (Unit)</span>
             <div className="flex flex-wrap items-center gap-2">
               {INVENTORY_UNITS.map((u) => (
                 <button
@@ -291,8 +291,8 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                   onClick={() => setUnit(u)}
                   className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                     unit === u
-                      ? 'bg-sky-600 border-sky-500 text-white'
-                      : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
+                      ? 'bg-[#F26522] border-[#F26522] text-white'
+                      : 'bg-[#F9FAFB] border-neutral-200 text-neutral-700 hover:bg-neutral-100'
                   }`}
                 >
                   {u}
@@ -303,8 +303,8 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
 
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1 space-y-1.5">
-              <label htmlFor="invNote" className="block text-xs font-semibold text-slate-300">
-                বিবরণ / সংরক্ষণ স্থান <span className="font-normal text-slate-500">(ঐচ্ছিক)</span>
+              <label htmlFor="invNote" className="block text-xs font-semibold text-neutral-700">
+                বিবরণ / সংরক্ষণ স্থান <span className="font-normal text-neutral-400">(ঐচ্ছিক)</span>
               </label>
               <input
                 id="invNote"
@@ -313,14 +313,14 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="যেমন: স্টোর রুমের তাক ২ বা প্রতি বোতল ৫০০ মি.লি."
-                className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+                className="w-full bg-[#F9FAFB] border border-neutral-200 rounded-lg px-3.5 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
               />
             </div>
 
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] disabled:opacity-60 text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0"
             >
               <Plus className="w-4 h-4" />
               {submitting ? 'যুক্ত হচ্ছে...' : 'তালিকায় যুক্ত করুন'}
@@ -328,7 +328,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
           </div>
 
           {formError && (
-            <div className="text-xs font-medium text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+            <div className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
               {formError}
             </div>
           )}
@@ -336,15 +336,15 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
       )}
 
       {/* সার্চ ও একক ফিল্টার */}
-      <div className="bg-[#101829] border border-slate-800 rounded-xl p-3.5 space-y-3">
+      <div className="bg-white border border-neutral-200 rounded-xl p-3.5 space-y-3 shadow-xs">
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="জিনিসের নাম বা একক দিয়ে খুঁজুন..."
-            className="w-full bg-[#090E1A] border border-slate-700/80 rounded-lg pl-9 pr-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
+            className="w-full bg-[#F9FAFB] border border-neutral-200 rounded-lg pl-9 pr-3.5 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:bg-white focus:outline-none focus:border-[#F26522]"
           />
         </div>
 
@@ -358,8 +358,8 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                 onClick={() => setUnitFilter(u)}
                 className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   active
-                    ? 'bg-sky-600 border-sky-500 text-white'
-                    : 'bg-[#090E1A] border-slate-700/80 text-slate-300 hover:bg-slate-800'
+                    ? 'bg-[#F26522] border-[#F26522] text-white'
+                    : 'bg-[#F9FAFB] border-neutral-200 text-neutral-700 hover:bg-neutral-100'
                 }`}
               >
                 {u}
@@ -371,7 +371,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
 
       {/* স্টক তালিকা */}
       {filteredItems.length === 0 ? (
-        <div className="bg-[#101829] border border-slate-800 rounded-xl p-8 text-center text-sm text-slate-400">
+        <div className="bg-white border border-neutral-200 rounded-xl p-8 text-center text-sm text-neutral-500 shadow-xs">
           {items.length === 0
             ? 'এখনো কোনো স্টক বা মজুত আইটেম যুক্ত করা হয়নি'
             : 'নির্বাচিত ফিল্টারে কোনো জিনিস পাওয়া যায়নি'}
@@ -387,8 +387,8 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
             return (
               <div
                 key={item.id}
-                className={`bg-[#101829] border rounded-xl p-4 flex flex-col justify-between gap-3 transition-colors ${
-                  isOutOfStock ? 'border-rose-500/40' : 'border-slate-800'
+                className={`bg-white border rounded-xl p-4 flex flex-col justify-between gap-3 shadow-xs transition-colors ${
+                  isOutOfStock ? 'border-rose-300' : 'border-neutral-200'
                 }`}
               >
                 {isEditing ? (
@@ -399,7 +399,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                         maxLength={MAX_INVENTORY_NAME_LEN}
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="bg-[#090E1A] border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500"
+                        className="bg-[#F9FAFB] border border-neutral-200 rounded-lg px-3 py-1.5 text-sm text-neutral-900 focus:bg-white focus:outline-none focus:border-[#F26522]"
                         placeholder="জিনিসের নাম"
                       />
                       <div className="flex items-center gap-2">
@@ -410,12 +410,12 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                           step="any"
                           value={editQty}
                           onChange={(e) => setEditQty(e.target.value)}
-                          className="w-24 bg-[#090E1A] border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-mono-num font-bold text-white focus:outline-none focus:border-sky-500"
+                          className="w-24 bg-[#F9FAFB] border border-neutral-200 rounded-lg px-2.5 py-1.5 text-sm font-mono-num font-bold text-neutral-900 focus:bg-white focus:outline-none focus:border-[#F26522]"
                         />
                         <select
                           value={editUnit}
                           onChange={(e) => setEditUnit(e.target.value as InventoryUnit)}
-                          className="flex-1 bg-[#090E1A] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:border-sky-500"
+                          className="flex-1 bg-[#F9FAFB] border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-neutral-900 focus:bg-white focus:outline-none focus:border-[#F26522]"
                         >
                           {INVENTORY_UNITS.map((u) => (
                             <option key={u} value={u}>
@@ -432,14 +432,14 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                       value={editNote}
                       onChange={(e) => setEditNote(e.target.value)}
                       placeholder="নোট (ঐচ্ছিক)"
-                      className="w-full bg-[#090E1A] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
+                      className="w-full bg-[#F9FAFB] border border-neutral-200 rounded-lg px-3 py-1.5 text-xs text-neutral-800 focus:bg-white focus:outline-none focus:border-[#F26522]"
                     />
 
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setEditingId(null)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
                       >
                         <X className="w-3.5 h-3.5" />
                         বাতিল
@@ -448,7 +448,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                         type="button"
                         disabled={isBusy}
                         onClick={() => void handleSaveEdit(item)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white"
                       >
                         <Check className="w-3.5 h-3.5" />
                         সংরক্ষণ
@@ -459,38 +459,38 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                   <>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 space-y-1">
-                        <div className="text-base font-bold text-white break-words">
+                        <div className="text-base font-bold text-neutral-900 break-words">
                           {item.name}
                         </div>
                         {item.note && (
-                          <div className="text-xs text-slate-400 break-words">{item.note}</div>
+                          <div className="text-xs text-neutral-500 break-words">{item.note}</div>
                         )}
                       </div>
 
                       <div className="text-right shrink-0">
                         <div
                           className={`text-xl font-bold font-mono-num ${
-                            isOutOfStock ? 'text-rose-400' : 'text-emerald-400'
+                            isOutOfStock ? 'text-rose-600' : 'text-emerald-600'
                           }`}
                         >
                           {formatStockQty(item.quantity)}{' '}
                           <span className="text-sm font-semibold">{item.unit}</span>
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] text-neutral-500">
                           {isOutOfStock ? 'স্টক শেষ' : 'মজুত আছে'}
                         </div>
                       </div>
                     </div>
 
                     {canEdit && (
-                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-800">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-neutral-100">
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             disabled={isBusy || item.quantity <= 0}
                             onClick={() => void handleAdjustQty(item, -stepSize)}
                             aria-label="পরিমাণ কমান"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#090E1A] border border-slate-700 hover:border-amber-500/60 text-slate-200 disabled:opacity-40 text-xs font-mono-num font-semibold transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F9FAFB] border border-neutral-200 hover:border-amber-500 text-neutral-700 disabled:opacity-40 text-xs font-mono-num font-semibold transition-colors"
                           >
                             <Minus className="w-3.5 h-3.5" />
                             {stepSize}
@@ -500,7 +500,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                             disabled={isBusy}
                             onClick={() => void handleAdjustQty(item, stepSize)}
                             aria-label="পরিমাণ বাড়ান"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#090E1A] border border-slate-700 hover:border-emerald-500/60 text-slate-200 disabled:opacity-40 text-xs font-mono-num font-semibold transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F9FAFB] border border-neutral-200 hover:border-emerald-500 text-neutral-700 disabled:opacity-40 text-xs font-mono-num font-semibold transition-colors"
                           >
                             <Plus className="w-3.5 h-3.5" />
                             {stepSize}
@@ -513,7 +513,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                             disabled={isBusy}
                             onClick={() => startEdit(item)}
                             aria-label="তথ্য পরিবর্তন করুন"
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#090E1A] border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-semibold transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F9FAFB] border border-neutral-200 hover:bg-neutral-100 text-neutral-700 text-xs font-semibold transition-colors"
                           >
                             <Pencil className="w-3.5 h-3.5" />
                             এডিট
@@ -523,7 +523,7 @@ export const StockInventorySection: React.FC<StockInventorySectionProps> = ({
                             disabled={isBusy}
                             onClick={() => setDeleteTarget(item)}
                             aria-label="আইটেম মুছুন"
-                            className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 text-rose-400 transition-colors"
+                            className="p-1.5 rounded-lg bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>

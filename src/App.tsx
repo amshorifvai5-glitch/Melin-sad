@@ -602,22 +602,22 @@ export default function App() {
       : MENU_ITEMS.find((m) => m.id === activePage)?.title || 'ড্যাশবোর্ড';
 
   return (
-    <div className="min-h-screen portal-canvas text-slate-100 flex">
+    <div className="min-h-screen portal-canvas text-neutral-900 flex">
       {/* মোবাইল সাইডবার ওভারলে */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-black/70 backdrop-blur-[2px] z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-40 lg:hidden"
         />
       )}
 
       {/* বাম পাশের সাইডবার নেভিগেশন */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-[#0B1120] text-slate-100 z-50 border-r border-slate-800/90 flex flex-col shrink-0 transition-transform duration-200 ${
+        className={`fixed lg:sticky top-0 left-0 h-screen w-64 bg-[#0B0B0D] text-neutral-100 z-50 border-r border-neutral-800 flex flex-col shrink-0 transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="p-4 border-b border-slate-800/90 flex items-center justify-between gap-2">
+        <div className="p-4 border-b border-neutral-800 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0">
             {canEdit ? (
               <>
@@ -631,7 +631,7 @@ export default function App() {
                     alt={PROFILE_INFO.displayNameEn}
                     sizeClass="w-10 h-10"
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-sky-600 text-white flex items-center justify-center border border-[#0B1120]">
+                  <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#F26522] text-white flex items-center justify-center border border-[#0B0B0D]">
                     <Camera className="w-2.5 h-2.5" />
                   </span>
                 </label>
@@ -655,7 +655,7 @@ export default function App() {
               <div className="font-bold text-sm text-white truncate">
                 {PROFILE_INFO.displayNameEn}
               </div>
-              <div className="text-xs text-slate-400 truncate font-mono-num">
+              <div className="text-xs text-neutral-400 truncate font-mono-num">
                 {PROFILE_INFO.roleTitle} · ID {PROFILE_INFO.employeeId}
               </div>
             </div>
@@ -664,7 +664,7 @@ export default function App() {
             type="button"
             onClick={() => setSidebarOpen(false)}
             aria-label="মেনু বন্ধ করুন"
-            className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg"
+            className="lg:hidden text-neutral-400 hover:text-white p-1.5 rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -676,15 +676,15 @@ export default function App() {
             onClick={() => navigateTo('home')}
             className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left text-sm font-semibold transition-colors ${
               activePage === 'home'
-                ? 'bg-sky-600 text-white shadow-sm shadow-sky-900/50'
-                : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                ? 'bg-[#F26522] text-white shadow-sm shadow-orange-950/50'
+                : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
             }`}
           >
             <Home className="w-4 h-4 shrink-0" />
             <span className="truncate">হোম ড্যাশবোর্ড</span>
           </button>
 
-          <div className="border-t border-slate-800/80 my-2.5" />
+          <div className="border-t border-neutral-800 my-2.5" />
 
           {MENU_ITEMS.map((item, idx) => {
             const isActive =
@@ -699,25 +699,25 @@ export default function App() {
                 onClick={() => navigateTo(item.id)}
                 className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
                   isActive
-                    ? 'bg-slate-800/90 text-white font-semibold border border-sky-500/30'
-                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white font-medium'
+                    ? 'bg-neutral-900 text-white font-semibold border border-[#F26522]/45'
+                    : 'text-neutral-300 hover:bg-neutral-900/70 hover:text-white font-medium'
                 }`}
               >
                 <span className="flex items-center gap-2.5 min-w-0">
                   <span
-                    className={`shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-400'}`}
+                    className={`shrink-0 ${isActive ? 'text-[#F26522]' : 'text-neutral-400'}`}
                   >
                     {SECTION_ICONS[item.id]}
                   </span>
                   <span className="truncate">
-                    <span className="font-mono-num text-xs text-slate-500 mr-1">
+                    <span className="font-mono-num text-xs text-neutral-500 mr-1">
                       {idx + 1}.
                     </span>
                     {item.title}
                   </span>
                 </span>
                 {badge && (
-                  <span className="text-[11px] font-mono-num text-slate-400 shrink-0">
+                  <span className="text-[11px] font-mono-num text-neutral-400 shrink-0">
                     {badge}
                   </span>
                 )}
@@ -727,22 +727,22 @@ export default function App() {
         </nav>
 
         {/* সাইডবার ফুটার: অ্যাপ ইনস্টল ও অ্যাডমিন লগইন */}
-        <div className="p-3 border-t border-slate-800/90 space-y-2">
+        <div className="p-3 border-t border-neutral-800 space-y-2">
           <PWAInstallButton variant="sidebar" />
           {currentUser ? (
             <div className="space-y-2">
-              <div className="px-2.5 py-2 rounded-lg bg-[#101829] border border-slate-800 text-xs">
+              <div className="px-2.5 py-2 rounded-lg bg-[#16161A] border border-neutral-800 text-xs">
                 <div className="font-semibold text-white truncate">
                   {canEdit ? 'অ্যাডমিন (এডিট চালু)' : 'শুধুমাত্র দেখার মোড'}
                 </div>
-                <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                <div className="text-[11px] text-neutral-400 truncate mt-0.5">
                   {currentUser.email}
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => void handleSignOut()}
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-100 text-xs font-semibold transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 লগআউট
@@ -753,7 +753,7 @@ export default function App() {
               type="button"
               disabled={authLoading || !authReady}
               onClick={() => void handleAdminSignIn()}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] disabled:opacity-60 text-white text-xs font-semibold transition-colors"
             >
               <LogIn className="w-3.5 h-3.5" />
               {authLoading ? 'লগইন হচ্ছে...' : 'অ্যাডমিন লগইন (এডিট)'}
@@ -765,14 +765,14 @@ export default function App() {
       {/* ডান পাশের মূল কন্টেন্ট এলাকা */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* টপ বার */}
-        <header className="sticky top-0 z-30 bg-[#0B1120]/90 backdrop-blur-md border-b border-slate-800/90 px-4 sm:px-6 py-3">
+        <header className="sticky top-0 z-30 bg-[#0B0B0D]/95 backdrop-blur-md border-b border-neutral-800 px-4 sm:px-6 py-3">
           <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
                 aria-label="মেনু খুলুন"
-                className="lg:hidden p-2 -ml-2 rounded-lg text-slate-300 hover:bg-slate-800 transition-colors"
+                className="lg:hidden p-2 -ml-2 rounded-lg text-neutral-200 hover:bg-neutral-800 transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -780,7 +780,7 @@ export default function App() {
                 <div className="text-sm font-bold text-white truncate whitespace-nowrap">
                   দৈনিক কাজের রিপোর্ট · {activeTitle}
                 </div>
-                <div className="text-xs text-slate-400 truncate">
+                <div className="text-xs text-neutral-400 truncate">
                   {formatBanglaDate(currentDate)} ·{' '}
                   {canEdit ? 'অ্যাডমিন এডিট মোড' : 'শুধুমাত্র দেখার মোড'}
                 </div>
@@ -788,7 +788,7 @@ export default function App() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 bg-[#090E1A] border border-slate-700/80 rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center gap-2 bg-[#16161A] border border-neutral-800 rounded-lg px-2.5 py-1.5">
                 <span className="text-xs font-semibold text-emerald-400">In</span>
                 {canEdit ? (
                   <input
@@ -798,15 +798,15 @@ export default function App() {
                       updateDayData((prev) => ({ ...prev, inTime: e.target.value }))
                     }
                     aria-label="In Time"
-                    className="bg-transparent text-xs font-mono-num font-bold text-slate-100 [color-scheme:dark] focus:outline-none"
+                    className="bg-transparent text-xs font-mono-num font-bold text-white [color-scheme:dark] focus:outline-none"
                   />
                 ) : (
-                  <span className="text-xs font-mono-num font-bold text-slate-100">
+                  <span className="text-xs font-mono-num font-bold text-white">
                     {dayData.inTime || '--:--'}
                   </span>
                 )}
-                <span className="text-slate-600">|</span>
-                <span className="text-xs font-semibold text-amber-400">Out</span>
+                <span className="text-neutral-600">|</span>
+                <span className="text-xs font-semibold text-[#F26522]">Out</span>
                 {canEdit ? (
                   <input
                     type="time"
@@ -815,10 +815,10 @@ export default function App() {
                       updateDayData((prev) => ({ ...prev, outTime: e.target.value }))
                     }
                     aria-label="Out Time"
-                    className="bg-transparent text-xs font-mono-num font-bold text-slate-100 [color-scheme:dark] focus:outline-none"
+                    className="bg-transparent text-xs font-mono-num font-bold text-white [color-scheme:dark] focus:outline-none"
                   />
                 ) : (
-                  <span className="text-xs font-mono-num font-bold text-slate-100">
+                  <span className="text-xs font-mono-num font-bold text-white">
                     {dayData.outTime || '--:--'}
                   </span>
                 )}
@@ -831,7 +831,7 @@ export default function App() {
                   if (e.target.value) setCurrentDate(e.target.value);
                 }}
                 aria-label="তারিখ নির্বাচন"
-                className="bg-[#090E1A] border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs font-mono-num font-semibold text-slate-100 [color-scheme:dark] focus:outline-none focus:border-sky-500"
+                className="bg-[#16161A] border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs font-mono-num font-semibold text-white [color-scheme:dark] focus:outline-none focus:border-[#F26522]"
               />
 
               <PWAInstallButton variant="header" />
@@ -839,7 +839,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => navigateTo('closing-report')}
-                className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                className="px-3.5 py-1.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
               >
                 রিপোর্ট দেখুন
               </button>
@@ -850,13 +850,13 @@ export default function App() {
         {/* মূল ভিউপোর্ট */}
         <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-4">
           {!canEdit && (
-            <div className="bg-[#101829] border border-slate-800 rounded-xl px-4 py-3 space-y-2">
+            <div className="bg-white border border-neutral-200 rounded-xl px-4 py-3 shadow-xs space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-300">
+                <div className="flex items-center gap-2.5 text-xs sm:text-sm text-neutral-700">
                   {currentUser ? (
-                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <Lock className="w-4 h-4 text-[#F26522] shrink-0" />
                   ) : (
-                    <Eye className="w-4 h-4 text-sky-400 shrink-0" />
+                    <Eye className="w-4 h-4 text-[#F26522] shrink-0" />
                   )}
                   <span>
                     {currentUser
@@ -868,14 +868,14 @@ export default function App() {
                   type="button"
                   disabled={authLoading || !authReady}
                   onClick={() => void handleAdminSignIn()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] disabled:opacity-60 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
                 >
                   <LogIn className="w-3.5 h-3.5" />
                   {currentUser ? 'অন্য অ্যাকাউন্টে লগইন' : 'অ্যাডমিন লগইন'}
                 </button>
               </div>
               {authError && (
-                <div className="text-xs font-medium text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+                <div className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
                   {authError}
                 </div>
               )}
@@ -883,14 +883,14 @@ export default function App() {
           )}
 
           {hasLocalDraft && (
-            <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-xs sm:text-sm font-medium text-sky-200">
+            <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs sm:text-sm font-medium text-orange-950">
                 এই তারিখের জন্য ব্রাউজারে আগে সেভ করা তথ্য পাওয়া গেছে। ক্লাউডে আপলোড করতে চান?
               </span>
               <button
                 type="button"
                 onClick={handleSyncLocalDraft}
-                className="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                className="px-3.5 py-1.5 rounded-lg bg-[#F26522] hover:bg-[#DC5214] text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
               >
                 ক্লাউডে সিঙ্ক করুন
               </button>
@@ -898,7 +898,7 @@ export default function App() {
           )}
 
           {loadingReport ? (
-            <div className="bg-[#101829] border border-slate-800 rounded-xl p-8 text-center text-sm text-slate-400">
+            <div className="bg-white border border-neutral-200 rounded-xl p-8 text-center text-sm text-neutral-500 shadow-xs">
               রিপোর্ট লোড হচ্ছে...
             </div>
           ) : (
@@ -1071,7 +1071,7 @@ export default function App() {
         </main>
 
         {/* ফুটার */}
-        <footer className="max-w-5xl w-full mx-auto px-4 sm:px-6 pt-5 pb-20 sm:pb-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+        <footer className="max-w-5xl w-full mx-auto px-4 sm:px-6 pt-5 pb-20 sm:pb-6 border-t border-neutral-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-neutral-500">
           <div>
             © {new Date().getFullYear()} {PROFILE_INFO.displayNameEn} (ID:{' '}
             {PROFILE_INFO.employeeId}) · HR & Admin Daily Work Portal
@@ -1093,7 +1093,7 @@ export default function App() {
 
       {/* টোস্ট নোটিফিকেশন */}
       {toastMessage && (
-        <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 bg-[#101829] text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-2xl z-50 border border-sky-500/40 whitespace-nowrap">
+        <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 bg-[#0B0B0D] text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-2xl z-50 border border-[#F26522]/60 whitespace-nowrap">
           {toastMessage}
         </div>
       )}
