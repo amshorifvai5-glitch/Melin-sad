@@ -175,6 +175,22 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function isValidLiveLocation(data) {
+      return data.keys().hasAll([
+          'ownerUid', 'locationLabel', 'note', 'isActive', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid', 'locationLabel', 'note', 'isActive', 'updatedAt'
+        ])
+        && data.ownerUid is string
+        && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128
+        && data.locationLabel is string
+        && data.locationLabel.size() >= 1 && data.locationLabel.size() <= 80
+        && data.note is string && data.note.size() <= 160
+        && data.isActive is bool
+        && data.updatedAt is timestamp;
+    }
+
     // Connection check document
     match /test/connection {
       allow get: if true;
@@ -198,6 +214,24 @@ service cloud.firestore {
         && isValidProfileSettings(incoming())
         && incoming().ownerUid == existing().ownerUid
         && incoming().diff(existing()).affectedKeys().hasOnly(['photoDataUrl', 'updatedAt'])
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin();
+    }
+
+    // Real-time corner location status: everyone can view, only verified owner/admin can edit
+    match /portal_settings/live_location {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isAdmin()
+        && isValidLiveLocation(incoming())
+        && incoming().ownerUid == request.auth.uid
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidLiveLocation(incoming())
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'locationLabel', 'note', 'isActive', 'updatedAt'
+        ])
         && incoming().updatedAt == request.time;
       allow delete: if isAdmin();
     }

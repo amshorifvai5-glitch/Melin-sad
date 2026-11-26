@@ -344,6 +344,35 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "LiveLocationStatus": {
+      "title": "LiveLocationStatus",
+      "description": "Real-time current workplace or area status displayed in the corner widget.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "locationLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["ownerUid", "locationLabel", "note", "isActive", "updatedAt"]
     }
   },
   "firestore": {
@@ -362,6 +391,10 @@
     "/portal_settings/profile": {
       "schema": { "$ref": "#/entities/PortalProfileSettings" },
       "description": "Publicly readable portal avatar setting editable only by the verified owner/admin."
+    },
+    "/portal_settings/live_location": {
+      "schema": { "$ref": "#/entities/LiveLocationStatus" },
+      "description": "Publicly readable real-time corner location badge editable only by the verified owner/admin."
     },
     "/feedback/{feedbackId}": {
       "schema": { "$ref": "#/entities/FeedbackSubmission" },

@@ -32,6 +32,7 @@ import {
   FeedbackStatus,
   InventoryItem,
   InventoryUnit,
+  LiveLocationStatus,
   MenuItemConfig,
   OfficeExpenseEntry,
   PageId,
@@ -69,15 +70,18 @@ import {
   subscribeToDailyReport,
   subscribeToFeedbackInbox,
   subscribeToInventoryItems,
+  subscribeToLiveLocation,
   subscribeToProfilePhoto,
   updateFeedbackInCloud,
   updateInventoryItemInCloud,
+  saveLiveLocationToCloud,
 } from './services/reportSync';
 import { Avatar } from './components/Avatar';
 import { BasicWorkSection } from './components/BasicWorkSection';
 import { DeskFloorMapSection } from './components/DeskFloorMapSection';
 import { FeedbackSection } from './components/FeedbackSection';
 import { HomeDashboard } from './components/HomeDashboard';
+import { LiveLocationCorner } from './components/LiveLocationCorner';
 import { OfficeExpensesSection } from './components/OfficeExpensesSection';
 import { OfflineIndicator, PWAInstallButton } from './components/PWAInstallControls';
 import { StockInventorySection } from './components/StockInventorySection';
@@ -155,6 +159,8 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [feedbackItems, setFeedbackItems] = useState<FeedbackEntry[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [liveLocation, setLiveLocation] = useState<LiveLocationStatus | null>(null);
+  const [liveLocationExists, setLiveLocationExists] = useState(false);
 
   const reportDocExistsRef = useRef(false);
   reportDocExistsRef.current = reportDocExists;
@@ -224,6 +230,14 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = subscribeToInventoryItems((items) => {
       setInventoryItems(items);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToLiveLocation((status, exists) => {
+      setLiveLocation(status);
+      setLiveLocationExists(exists);
     });
     return () => unsubscribe();
   }, []);
@@ -459,6 +473,17 @@ export default function App() {
     if (!canEdit) return;
     await deleteInventoryItemFromCloud(itemId);
     showToast('স্টক আইটেম মুছে ফেলা হয়েছে');
+  };
+
+  const handleSaveLiveLocation = async (payload: {
+    locationLabel: string;
+    note: string;
+    isActive: boolean;
+  }) => {
+    if (!canEdit || !currentUser) return;
+    await saveLiveLocationToCloud(currentUser.uid, payload, liveLocationExists);
+    setLiveLocationExists(true);
+    showToast(`লাইভ অবস্থান আপডেট হয়েছে: ${payload.locationLabel}`);
   };
 
   const handleSyncLocalDraft = () => {
@@ -1046,7 +1071,7 @@ export default function App() {
         </main>
 
         {/* ফুটার */}
-        <footer className="max-w-5xl w-full mx-auto px-4 sm:px-6 py-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+        <footer className="max-w-5xl w-full mx-auto px-4 sm:px-6 pt-5 pb-20 sm:pb-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
           <div>
             © {new Date().getFullYear()} {PROFILE_INFO.displayNameEn} (ID:{' '}
             {PROFILE_INFO.employeeId}) · HR & Admin Daily Work Portal
@@ -1058,9 +1083,17 @@ export default function App() {
       {/* অফলাইন ইন্ডিকেটর */}
       <OfflineIndicator />
 
+      {/* কোণায় লাইভ অবস্থান ব্যাজ */}
+      <LiveLocationCorner
+        status={liveLocation}
+        fallbackDutyStatus={dayData.dutyStatus}
+        canEdit={canEdit}
+        onSave={handleSaveLiveLocation}
+      />
+
       {/* টোস্ট নোটিফিকেশন */}
       {toastMessage && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-[#101829] text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-2xl z-50 border border-sky-500/40">
+        <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 bg-[#101829] text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-2xl z-50 border border-sky-500/40 whitespace-nowrap">
           {toastMessage}
         </div>
       )}

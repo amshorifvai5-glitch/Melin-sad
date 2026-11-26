@@ -105,6 +105,18 @@ export const MAX_INVENTORY_NAME_LEN = 120;
 export const MAX_INVENTORY_NOTE_LEN = 300;
 export const MAX_INVENTORY_QTY = 100000;
 
+export const MAX_LIVE_LOCATION_LABEL_LEN = 80;
+export const MAX_LIVE_LOCATION_NOTE_LEN = 160;
+export const LIVE_LOCATION_PRESETS: Array<{ label: string; isActive: boolean }> = [
+  { label: 'HQ অফিস', isActive: true },
+  { label: 'TS অফিস', isActive: true },
+  { label: 'HQ ও TS-এর মাঝে', isActive: true },
+  { label: 'মিটিং রুম / ফ্লোর', isActive: true },
+  { label: 'লাঞ্চ / চা বিরতি', isActive: true },
+  { label: 'অফিসের কাজে বাইরে', isActive: true },
+  { label: 'অফ-ডিউটি / বাসায়', isActive: false },
+];
+
 export const EXPENSE_CATEGORIES = ['চা-নাস্তা', 'যাতায়াত', 'মালামাল ক্রয়', 'অন্যান্য'] as const;
 export const MAX_EXPENSE_TITLE_LEN = 200;
 export const MAX_EXPENSE_NOTE_LEN = 500;

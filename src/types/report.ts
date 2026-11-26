@@ -62,6 +62,13 @@ export interface InventoryItem {
   updatedAtMs: number;
 }
 
+export interface LiveLocationStatus {
+  locationLabel: string;
+  note: string;
+  isActive: boolean;
+  updatedAtMs: number;
+}
+
 export interface BasicTaskProgress {
   done: boolean;
   time: string;

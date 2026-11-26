@@ -20,6 +20,7 @@ import {
   FeedbackStatus,
   InventoryItem,
   InventoryUnit,
+  LiveLocationStatus,
   OfficeExpenseEntry,
   WorkProofEntry,
 } from '../types/report';
@@ -38,6 +39,8 @@ import {
   MAX_INVENTORY_NAME_LEN,
   MAX_INVENTORY_NOTE_LEN,
   MAX_INVENTORY_QTY,
+  MAX_LIVE_LOCATION_LABEL_LEN,
+  MAX_LIVE_LOCATION_NOTE_LEN,
   createEmptyDayData,
 } from '../data/portalData';
 
@@ -598,5 +601,74 @@ export async function deleteInventoryItemFromCloud(itemId: string): Promise<void
     await deleteDoc(doc(db, 'inventory_items', itemId));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+export function subscribeToLiveLocation(
+  onData: (status: LiveLocationStatus | null, exists: boolean) => void
+): () => void {
+  const path = 'portal_settings/live_location';
+  return onSnapshot(
+    doc(db, 'portal_settings', 'live_location'),
+    (snap) => {
+      if (!snap.exists()) {
+        onData(null, false);
+        return;
+      }
+      const raw = snap.data();
+      const updatedAtMs = raw.updatedAt instanceof Timestamp ? raw.updatedAt.toMillis() : 0;
+      onData(
+        {
+          locationLabel: String(raw.locationLabel || ''),
+          note: String(raw.note || ''),
+          isActive: Boolean(raw.isActive),
+          updatedAtMs,
+        },
+        true
+      );
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    }
+  );
+}
+
+export async function saveLiveLocationToCloud(
+  ownerUid: string,
+  payload: { locationLabel: string; note: string; isActive: boolean },
+  docExists: boolean
+): Promise<void> {
+  const path = 'portal_settings/live_location';
+  const docRef = doc(db, 'portal_settings', 'live_location');
+  const cleanLabel = String(payload.locationLabel || '')
+    .trim()
+    .slice(0, MAX_LIVE_LOCATION_LABEL_LEN);
+  const cleanNote = String(payload.note || '')
+    .trim()
+    .slice(0, MAX_LIVE_LOCATION_NOTE_LEN);
+
+  if (!cleanLabel) {
+    throw new Error('অবস্থানের নাম খালি রাখা যাবে না');
+  }
+
+  try {
+    if (!docExists) {
+      await setDoc(docRef, {
+        ownerUid,
+        locationLabel: cleanLabel,
+        note: cleanNote,
+        isActive: Boolean(payload.isActive),
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      await updateDoc(docRef, {
+        locationLabel: cleanLabel,
+        note: cleanNote,
+        isActive: Boolean(payload.isActive),
+        updatedAt: serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    handleFirestoreError(error, docExists ? OperationType.UPDATE : OperationType.CREATE, path);
   }
 }
