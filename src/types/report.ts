@@ -75,6 +75,11 @@ export interface SiteVisitEntry {
   dateId: string;
   visitorToken: string;
   deviceType: 'মোবাইল' | 'ডেস্কটপ';
+  osName: string;
+  browserName: string;
+  screenSize: string;
+  timezone: string;
+  referrerHost: string;
   activePage: string;
   viewsCount: number;
   createdAtMs: number;

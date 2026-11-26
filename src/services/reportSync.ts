@@ -706,6 +706,64 @@ function detectDeviceType(): 'মোবাইল' | 'ডেস্কটপ' {
   return 'ডেস্কটপ';
 }
 
+function detectClientMetadata(): {
+  osName: string;
+  browserName: string;
+  screenSize: string;
+  timezone: string;
+  referrerHost: string;
+} {
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+
+  let osName = 'অন্যান্য';
+  if (/Android/i.test(ua)) osName = 'Android';
+  else if (/iPhone|iPad|iPod/i.test(ua)) osName = 'iPhone / iOS';
+  else if (/Windows/i.test(ua)) osName = 'Windows';
+  else if (/Mac OS X|Macintosh/i.test(ua)) osName = 'macOS';
+  else if (/Linux/i.test(ua)) osName = 'Linux';
+
+  let browserName = 'অন্যান্য';
+  if (/Edg\//i.test(ua)) browserName = 'Edge';
+  else if (/OPR\/|Opera/i.test(ua)) browserName = 'Opera';
+  else if (/SamsungBrowser/i.test(ua)) browserName = 'Samsung Internet';
+  else if (/Firefox\//i.test(ua)) browserName = 'Firefox';
+  else if (/Chrome\/|CriOS/i.test(ua)) browserName = 'Chrome';
+  else if (/Safari\//i.test(ua)) browserName = 'Safari';
+
+  const screenW =
+    typeof window !== 'undefined' ? window.screen?.width || window.innerWidth || 0 : 0;
+  const screenH =
+    typeof window !== 'undefined' ? window.screen?.height || window.innerHeight || 0 : 0;
+  const screenSize = screenW > 0 && screenH > 0 ? `${screenW}×${screenH}`.slice(0, 24) : '';
+
+  let timezone = '';
+  try {
+    timezone = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').slice(0, 60);
+  } catch {
+    timezone = '';
+  }
+
+  let referrerHost = 'সরাসরি লিংক';
+  try {
+    if (typeof document !== 'undefined' && document.referrer) {
+      const refUrl = new URL(document.referrer);
+      if (typeof window !== 'undefined' && refUrl.host && refUrl.host !== window.location.host) {
+        referrerHost = refUrl.host.slice(0, 100);
+      }
+    }
+  } catch {
+    referrerHost = 'সরাসরি লিংক';
+  }
+
+  return {
+    osName: osName.slice(0, 30),
+    browserName: browserName.slice(0, 30),
+    screenSize,
+    timezone,
+    referrerHost: referrerHost.slice(0, 100),
+  };
+}
+
 export async function recordSiteVisitHeartbeat(
   dateId: string,
   activePage: string,
@@ -718,6 +776,7 @@ export async function recordSiteVisitHeartbeat(
   const docRef = doc(db, 'site_visits', visitId);
   const cleanPage = String(activePage || 'home').slice(0, 40) || 'home';
   const deviceType = detectDeviceType();
+  const meta = detectClientMetadata();
 
   let alreadyRegisteredToday = false;
   try {
@@ -732,6 +791,11 @@ export async function recordSiteVisitHeartbeat(
       dateId,
       visitorToken,
       deviceType,
+      osName: meta.osName,
+      browserName: meta.browserName,
+      screenSize: meta.screenSize,
+      timezone: meta.timezone,
+      referrerHost: meta.referrerHost,
       activePage: cleanPage,
       viewsCount: 1,
       createdAt: serverTimestamp(),
@@ -761,6 +825,11 @@ export async function recordSiteVisitHeartbeat(
   try {
     await updateDoc(docRef, {
       activePage: cleanPage,
+      osName: meta.osName,
+      browserName: meta.browserName,
+      screenSize: meta.screenSize,
+      timezone: meta.timezone,
+      referrerHost: meta.referrerHost,
       ...(countOpen ? { viewsCount: increment(1) } : {}),
       lastSeenAt: serverTimestamp(),
     });
@@ -797,6 +866,11 @@ export function subscribeToSiteVisits(
           dateId: String(raw.dateId || ''),
           visitorToken: String(raw.visitorToken || ''),
           deviceType: raw.deviceType === 'মোবাইল' ? 'মোবাইল' : 'ডেস্কটপ',
+          osName: String(raw.osName || ''),
+          browserName: String(raw.browserName || ''),
+          screenSize: String(raw.screenSize || ''),
+          timezone: String(raw.timezone || ''),
+          referrerHost: String(raw.referrerHost || ''),
           activePage: String(raw.activePage || 'home'),
           viewsCount:
             typeof raw.viewsCount === 'number' && Number.isFinite(raw.viewsCount)

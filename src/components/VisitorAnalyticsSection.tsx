@@ -49,6 +49,19 @@ function formatRelativeSeenBn(lastSeenAtMs: number, nowMs: number): { label: str
   return { label: `${days} দিন আগে`, isLive: false };
 }
 
+function formatClockTimeBn(ms: number): string {
+  if (!ms) return '--:--';
+  try {
+    return new Date(ms).toLocaleTimeString('bn-BD', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return '--:--';
+  }
+}
+
 export const VisitorAnalyticsSection: React.FC<VisitorAnalyticsSectionProps> = ({
   visits,
   canEdit,
@@ -356,11 +369,11 @@ export const VisitorAnalyticsSection: React.FC<VisitorAnalyticsSectionProps> = (
                   return (
                     <div
                       key={visit.id}
-                      className="px-4 py-3 flex flex-wrap items-center justify-between gap-3 hover:bg-neutral-50 transition-colors"
+                      className="px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-neutral-50 transition-colors"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-start gap-3 min-w-0">
                         <span
-                          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
                             status.isLive
                               ? 'bg-orange-50 border border-orange-200 text-[#F26522]'
                               : 'bg-neutral-100 border border-neutral-200 text-neutral-600'
@@ -372,7 +385,7 @@ export const VisitorAnalyticsSection: React.FC<VisitorAnalyticsSectionProps> = (
                             <Monitor className="w-4 h-4" />
                           )}
                         </span>
-                        <div className="min-w-0">
+                        <div className="min-w-0 space-y-1">
                           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold text-neutral-900">
                             <span className="font-mono-num">ভিজিটর #{shortCode}</span>
                             <span aria-hidden="true" className="text-neutral-300">
@@ -386,17 +399,47 @@ export const VisitorAnalyticsSection: React.FC<VisitorAnalyticsSectionProps> = (
                               {status.label}
                             </span>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500 mt-0.5">
-                            <span>দেখছেন: {getPageLabelBn(visit.activePage)}</span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-600">
+                            <span className="font-medium text-neutral-800">
+                              দেখছেন: {getPageLabelBn(visit.activePage)}
+                            </span>
                             <span aria-hidden="true">·</span>
-                            <span>{visit.deviceType}</span>
+                            <span>
+                              {visit.deviceType}
+                              {visit.osName ? ` (${visit.osName})` : ''}
+                            </span>
+                            {visit.browserName && (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <span>ব্রাউজার: {visit.browserName}</span>
+                              </>
+                            )}
+                            {visit.screenSize && (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <span className="font-mono-num">স্ক্রিন: {visit.screenSize}</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-neutral-500">
+                            <span>মাধ্যম: {visit.referrerHost || 'সরাসরি লিংক'}</span>
+                            {visit.timezone && (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <span className="font-mono-num">{visit.timezone}</span>
+                              </>
+                            )}
+                            <span aria-hidden="true">·</span>
+                            <span className="font-mono-num">
+                              প্রথম প্রবেশ: {formatClockTimeBn(visit.createdAtMs)}
+                            </span>
                             <span aria-hidden="true">·</span>
                             <span className="font-mono-num">{visit.dateId}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center justify-end gap-3 shrink-0">
                         <span className="text-xs font-mono-num font-bold text-neutral-800">
                           {visit.viewsCount} বার দেখা
                         </span>
@@ -414,6 +457,12 @@ export const VisitorAnalyticsSection: React.FC<VisitorAnalyticsSectionProps> = (
                 })}
               </div>
             )}
+
+            <div className="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-lg px-3.5 py-2.5 leading-relaxed">
+              নোট: ব্রাউজার থেকে স্বয়ংক্রিয়ভাবে ডিভাইস, অপারেটিং সিস্টেম, ব্রাউজার, স্ক্রিন সাইজ,
+              টাইমজোন এবং লিংক উৎস দেখা যায়। তবে ব্রাউজার সিকিউরিটির কারণে ভিজিটরের ব্যক্তিগত নাম,
+              মোবাইল নম্বর বা ইমেইল অনুমতি/লগইন ছাড়া দেখা যায় না।
+            </div>
           </section>
         </>
       )}

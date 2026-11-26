@@ -402,6 +402,26 @@
           "enum": ["মোবাইল", "ডেস্কটপ"],
           "maxLength": 20
         },
+        "osName": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "browserName": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "screenSize": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "timezone": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "referrerHost": {
+          "type": "string",
+          "maxLength": 100
+        },
         "activePage": {
           "type": "string",
           "minLength": 1,

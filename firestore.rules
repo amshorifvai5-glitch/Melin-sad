@@ -198,6 +198,7 @@ service cloud.firestore {
         ])
         && data.keys().hasOnly([
           'visitId', 'dateId', 'visitorToken', 'deviceType',
+          'osName', 'browserName', 'screenSize', 'timezone', 'referrerHost',
           'activePage', 'viewsCount', 'createdAt', 'lastSeenAt'
         ])
         && data.visitId is string && data.visitId == visitId
@@ -208,6 +209,11 @@ service cloud.firestore {
         && data.visitId == data.dateId + '_' + data.visitorToken
         && data.deviceType is string && data.deviceType.size() <= 20
         && data.deviceType in ['মোবাইল', 'ডেস্কটপ']
+        && (!('osName' in data) || (data.osName is string && data.osName.size() <= 30))
+        && (!('browserName' in data) || (data.browserName is string && data.browserName.size() <= 30))
+        && (!('screenSize' in data) || (data.screenSize is string && data.screenSize.size() <= 24))
+        && (!('timezone' in data) || (data.timezone is string && data.timezone.size() <= 60))
+        && (!('referrerHost' in data) || (data.referrerHost is string && data.referrerHost.size() <= 100))
         && data.activePage is string
         && data.activePage.size() >= 1 && data.activePage.size() <= 40
         && data.viewsCount is number && data.viewsCount >= 1 && data.viewsCount <= 1000
@@ -424,7 +430,8 @@ service cloud.firestore {
         && incoming().viewsCount >= existing().viewsCount
         && incoming().viewsCount <= existing().viewsCount + 1
         && incoming().diff(existing()).affectedKeys().hasOnly([
-          'activePage', 'viewsCount', 'lastSeenAt'
+          'activePage', 'viewsCount', 'lastSeenAt',
+          'osName', 'browserName', 'screenSize', 'timezone', 'referrerHost'
         ]);
 
       allow delete: if isAdmin() && isValidId(visitId);
