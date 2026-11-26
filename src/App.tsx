@@ -83,6 +83,7 @@ import { FeedbackSection } from './components/FeedbackSection';
 import { HomeDashboard } from './components/HomeDashboard';
 import { LiveLocationCorner } from './components/LiveLocationCorner';
 import { OfficeExpensesSection } from './components/OfficeExpensesSection';
+import { OpeningIntro } from './components/OpeningIntro';
 import { OfflineIndicator, PWAInstallButton } from './components/PWAInstallControls';
 import { StockInventorySection } from './components/StockInventorySection';
 import {
@@ -161,6 +162,7 @@ export default function App() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [liveLocation, setLiveLocation] = useState<LiveLocationStatus | null>(null);
   const [liveLocationExists, setLiveLocationExists] = useState(false);
+  const [showOpening, setShowOpening] = useState(true);
 
   const reportDocExistsRef = useRef(false);
   reportDocExistsRef.current = reportDocExists;
@@ -902,7 +904,7 @@ export default function App() {
               রিপোর্ট লোড হচ্ছে...
             </div>
           ) : (
-            <>
+            <div key={activePage} className="animate-page-enter">
               {activePage === 'home' && (
                 <HomeDashboard
                   currentDate={currentDate}
@@ -1066,7 +1068,7 @@ export default function App() {
                   onBack={() => handleGoBack('home')}
                 />
               )}
-            </>
+            </div>
           )}
         </main>
 
@@ -1090,6 +1092,11 @@ export default function App() {
         canEdit={canEdit}
         onSave={handleSaveLiveLocation}
       />
+
+      {/* ওপেনিং অ্যানিমেশন */}
+      {showOpening && (
+        <OpeningIntro profilePhoto={profilePhoto} onFinish={() => setShowOpening(false)} />
+      )}
 
       {/* টোস্ট নোটিফিকেশন */}
       {toastMessage && (
