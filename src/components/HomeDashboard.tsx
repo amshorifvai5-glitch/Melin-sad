@@ -1,5 +1,13 @@
 import React from 'react';
-import { Boxes, ChevronRight, FileText, MessageSquarePlus, Receipt, Users } from 'lucide-react';
+import {
+  Boxes,
+  CalendarOff,
+  ChevronRight,
+  FileText,
+  MessageSquarePlus,
+  Receipt,
+  Users,
+} from 'lucide-react';
 import { DayReportData, InventoryItem, MenuItemConfig, PageId } from '../types/report';
 import {
   BASIC_TASKS,
@@ -10,8 +18,11 @@ import {
   countBasicWorkProgress,
   countDeskProgress,
   formatBanglaDate,
+  getDutyStatusDisplayLabel,
   getTotalBreakMinutes,
   getTotalExpenseAmount,
+  isDayOffStatus,
+  isFridayIsoDate,
 } from '../data/portalData';
 import { Avatar } from './Avatar';
 
@@ -26,6 +37,7 @@ interface HomeDashboardProps {
   todayVisitorCount: number;
   sectionIcons: Record<MenuItemConfig['id'], React.ReactNode>;
   onNavigate: (page: PageId) => void;
+  onMarkOffDay: () => void;
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -39,12 +51,17 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   todayVisitorCount,
   sectionIcons,
   onNavigate,
+  onMarkOffDay,
 }) => {
   const basicProgress = countBasicWorkProgress(dayData);
   const deskProgress = countDeskProgress(dayData);
   const breakMinutes = getTotalBreakMinutes(dayData);
   const suppliesDone = SUPPLY_ITEMS.filter((s) => Boolean(dayData.supplies[s.id])).length;
   const totalExpenses = getTotalExpenseAmount(dayData);
+  const isOffDay = isDayOffStatus(currentDate, dayData);
+  const isExplicitOffDay = dayData.dutyStatus === 'OFFDAY';
+  const isFriday = isFridayIsoDate(currentDate);
+  const dutyLabel = getDutyStatusDisplayLabel(dayData.dutyStatus, isOffDay);
 
   const basicPercent =
     basicProgress.total > 0
@@ -64,16 +81,26 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
       case 'personal-info':
         return `ID ${PROFILE_INFO.employeeId}`;
       case 'basic-work':
-        return `${basicProgress.done}/${basicProgress.total} সম্পন্ন`;
+        return isOffDay && basicProgress.done === 0
+          ? 'অফডে (প্রযোজ্য নয়)'
+          : `${basicProgress.done}/${basicProgress.total} সম্পন্ন`;
       case 'duty-location':
-        return dayData.dutyStatus || 'নির্ধারিত নয়';
+        return dutyLabel;
       case 'desk-chair':
-        return `${deskProgress.bothDone}/${TOTAL_DESKS}টি সম্পন্ন`;
+        return isOffDay && deskProgress.bothDone === 0
+          ? 'অফডে (প্রযোজ্য নয়)'
+          : `${deskProgress.bothDone}/${TOTAL_DESKS}টি সম্পন্ন`;
       case 'break-time':
-        return breakMinutes > 0 ? `মোট ${breakMinutes} মিনিট` : 'কোনো বিরতি নেই';
+        return breakMinutes > 0
+          ? `মোট ${breakMinutes} মিনিট`
+          : isOffDay
+          ? 'ছুটির দিন'
+          : 'কোনো বিরতি নেই';
       case 'attendance-time':
         return dayData.inTime || dayData.outTime
           ? `${dayData.inTime || '--:--'} – ${dayData.outTime || '--:--'}`
+          : isOffDay
+          ? 'সাপ্তাহিক ছুটি (অফডে)'
           : 'সময় সেট করা হয়নি';
       case 'office-commute':
         return dayData.commutes.length > 0 ? `${dayData.commutes.length}টি যাতায়াত` : 'রেকর্ড নেই';
@@ -82,7 +109,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           ? `${dayData.extraBasicTasks.length}টি কাজ`
           : 'অতিরিক্ত কাজ নেই';
       case 'supplies-refill':
-        return `${suppliesDone}/${SUPPLY_ITEMS.length}টি রিফিল`;
+        return isOffDay && suppliesDone === 0
+          ? 'অফডে (প্রযোজ্য নয়)'
+          : `${suppliesDone}/${SUPPLY_ITEMS.length}টি রিফিল`;
       case 'closing-report':
         return 'রিপোর্ট ও ডাউনলোড';
       case 'notes-issues':
@@ -223,9 +252,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 shrink-0">
             <div className="text-left sm:text-right">
-              <div className="text-xs text-neutral-400">আজকের সার্বিক অগ্রগতি</div>
+              <div className="text-xs text-neutral-400">
+                {isOffDay ? 'আজকের অবস্থা' : 'আজকের সার্বিক অগ্রগতি'}
+              </div>
               <div className="text-2xl font-bold font-mono-num text-white">
-                {overallPercent}%
+                {isOffDay ? 'অফডে' : `${overallPercent}%`}
               </div>
             </div>
 
@@ -248,9 +279,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             className="px-5 py-4 text-left hover:bg-white/5 transition-colors"
           >
             <div className="text-xs text-neutral-400">ডিউটি লোকেশন</div>
-            <div className="text-base sm:text-lg font-bold text-white mt-0.5">
-              {dayData.dutyStatus || 'নির্ধারিত নয়'}
-            </div>
+            <div className="text-base sm:text-lg font-bold text-white mt-0.5">{dutyLabel}</div>
             <div className="text-[11px] text-neutral-400 mt-1">পরিবর্তন করতে ক্লিক করুন</div>
           </button>
 
@@ -261,10 +290,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           >
             <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
               <span>বেসিক কাজ</span>
-              <span className="font-mono-num text-emerald-400 font-semibold">{basicPercent}%</span>
+              <span className="font-mono-num text-emerald-400 font-semibold">
+                {isOffDay && basicProgress.done === 0 ? 'অফডে' : `${basicPercent}%`}
+              </span>
             </div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
-              {basicProgress.done}/{basicProgress.total}
+              {isOffDay && basicProgress.done === 0
+                ? 'ছুটির দিন'
+                : `${basicProgress.done}/${basicProgress.total}`}
             </div>
             <div className="w-full h-1 bg-white/15 rounded-full overflow-hidden mt-2">
               <div
@@ -281,10 +314,14 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           >
             <div className="flex items-center justify-between gap-2 text-xs text-neutral-400">
               <span>ডেস্ক ও চেয়ার</span>
-              <span className="font-mono-num text-[#F26522] font-semibold">{deskPercent}%</span>
+              <span className="font-mono-num text-[#F26522] font-semibold">
+                {isOffDay && deskProgress.bothDone === 0 ? 'অফডে' : `${deskPercent}%`}
+              </span>
             </div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
-              {deskProgress.bothDone}/{TOTAL_DESKS}
+              {isOffDay && deskProgress.bothDone === 0
+                ? 'ছুটির দিন'
+                : `${deskProgress.bothDone}/${TOTAL_DESKS}`}
             </div>
             <div className="w-full h-1 bg-white/15 rounded-full overflow-hidden mt-2">
               <div
@@ -301,7 +338,11 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           >
             <div className="text-xs text-neutral-400">হাজিরা ও বিরতি</div>
             <div className="text-base sm:text-lg font-bold font-mono-num text-white mt-0.5">
-              {dayData.inTime || '--:--'} – {dayData.outTime || '--:--'}
+              {dayData.inTime || dayData.outTime
+                ? `${dayData.inTime || '--:--'} – ${dayData.outTime || '--:--'}`
+                : isOffDay
+                ? 'সাপ্তাহিক ছুটি'
+                : '--:-- – --:--'}
             </div>
             <div className="text-[11px] font-mono-num text-neutral-400 mt-1">
               মোট বিরতি: {breakMinutes} মিনিট · প্রমাণ: {dayData.proofs.length}টি
@@ -309,6 +350,52 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           </button>
         </div>
       </section>
+
+      {/* সাপ্তাহিক ছুটি / অফডে ব্যানার */}
+      {isOffDay && (
+        <section className="bg-[#0A2558] text-white border border-[#F26522]/40 rounded-xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5 min-w-0">
+            <span className="w-10 h-10 rounded-xl bg-[#F26522]/20 border border-[#F26522]/45 text-[#F26522] flex items-center justify-center shrink-0">
+              <CalendarOff className="w-5 h-5" />
+            </span>
+            <div className="min-w-0 space-y-1">
+              <div className="text-sm sm:text-base font-bold text-white">
+                {isExplicitOffDay
+                  ? 'আজকের দিনটি অফডে (Off-Day) হিসেবে নির্ধারিত'
+                  : isFriday
+                  ? 'আজ শুক্রবার — সাপ্তাহিক ছুটি (অফডে)'
+                  : 'আজ সাপ্তাহিক ছুটি / অফডে'}
+              </div>
+              <p className="text-xs sm:text-sm text-neutral-200 leading-relaxed">
+                {canEdit
+                  ? 'ছুটির দিনে প্রতিদিনের বেসিক কাজ, ডেস্ক ক্লিন ও রিফিল চেকলিস্ট পূরণের প্রয়োজন নেই। জরুরি কোনো কাজ, স্টক বা হিসাব আপডেট করতে চাইলে নিচের মেনুগুলো দেখতে পারেন।'
+                  : 'ছুটির দিনে প্রতিদিনের নিয়মিত কাজ, ডেস্ক ক্লিন ও রিফিল কার্যক্রম বন্ধ থাকে। স্টক, হিসাব বা অন্যান্য তথ্য দেখতে চাইলে নিচের মেনুগুলো দেখতে পারেন।'}
+              </p>
+            </div>
+          </div>
+
+          {canEdit && (
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {!isExplicitOffDay && (
+                <button
+                  type="button"
+                  onClick={onMarkOffDay}
+                  className="px-3.5 py-2 rounded-lg bg-[#F26522] hover:bg-[#DC5214] text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+                >
+                  অফডে সেভ করুন
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => onNavigate('duty-location')}
+                className="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
+              >
+                অবস্থান পরিবর্তন
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* বিভাগ ১: প্রতিদিনের মূল কার্যক্রম (১–৬) */}
       <section className="space-y-3">

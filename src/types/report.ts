@@ -18,7 +18,7 @@ export type PageId =
   | 'feedback'
   | 'visitor-analytics';
 
-export type DutyStatus = '' | 'HQ' | 'TS' | 'HQ/TS';
+export type DutyStatus = '' | 'HQ' | 'TS' | 'HQ/TS' | 'OFFDAY';
 
 export type FeedbackCategory = 'মতামত' | 'পরামর্শ' | 'অভিযোগ';
 export type FeedbackStatus = 'নতুন' | 'দেখা হয়েছে' | 'সমাধান হয়েছে';

@@ -30,9 +30,9 @@
         },
         "dutyStatus": {
           "type": "string",
-          "enum": ["", "HQ", "TS", "HQ/TS"],
+          "enum": ["", "HQ", "TS", "HQ/TS", "OFFDAY"],
           "maxLength": 10,
-          "description": "Selected duty location."
+          "description": "Selected duty location or off-day status."
         },
         "basicTasks": {
           "type": "object",

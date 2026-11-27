@@ -22,7 +22,7 @@
 6. Admin `update` changing immutable `createdAt` or `ownerUid` or `dateId` -> Rejected (`affectedKeys().hasOnly(...)` & immutability check).
 7. Admin `create` with client-forged `updatedAt` timestamp instead of `request.time` -> Rejected (`updatedAt == request.time`).
 8. Admin `create` with invalid `dateId` path (`"../../etc/passwd"` or `"invalid"`) -> Rejected (`isValidDateId(dateId)`).
-9. Admin `update` with `dutyStatus: "INVALID_SITE"` -> Rejected (`dutyStatus in ['', 'HQ', 'TS', 'HQ/TS']`).
+9. Admin `update` with `dutyStatus: "INVALID_SITE"` -> Rejected (`dutyStatus in ['', 'HQ', 'TS', 'HQ/TS', 'OFFDAY']`).
 10. Admin `update` with > 5000 char `notes` string -> Rejected (`notes.size() <= 5000`).
 11. Non-admin `list` or `get` on `/feedback` or `/site_visits`, or `create` on `/site_visits` with `viewsCount: 999999` or shadow field -> Rejected (`!isAdmin()` for reads; bounded `viewsCount == 1` & `hasOnly` on create).
 12. Unauthenticated `list` on `/admins` or catch-all `/unknown/doc` -> Rejected (default deny).

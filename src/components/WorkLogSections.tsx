@@ -199,31 +199,49 @@ export const DutyLocationSection: React.FC<{
   onSelect: (status: Exclude<DutyStatus, ''>) => void;
   onBack: () => void;
 }> = ({ dutyStatus, canEdit, onSelect, onBack }) => {
-  const options: Array<Exclude<DutyStatus, ''>> = ['HQ', 'TS', 'HQ/TS'];
+  const options: Array<{ value: Exclude<DutyStatus, ''>; label: string; hint: string }> = [
+    { value: 'HQ', label: 'HQ', hint: 'হেড অফিস ডিউটি' },
+    { value: 'TS', label: 'TS', hint: 'টেকনিক্যাল সাপোর্ট / সাইট' },
+    { value: 'HQ/TS', label: 'HQ/TS', hint: 'উভয় স্থানে ডিউটি' },
+    { value: 'OFFDAY', label: 'অফডে (Off-Day)', hint: 'সাপ্তাহিক বা ব্যক্তিগত ছুটি' },
+  ];
+
   return (
     <div className="space-y-4">
       <SectionHeader title="ডিউটি অবস্থান" onBack={onBack} />
 
       <div className="bg-white border border-neutral-200 rounded-xl p-5 space-y-3.5 shadow-xs">
         <p className="text-sm font-medium text-neutral-700">
-          {canEdit ? 'আজকের ডিউটি অবস্থান নির্বাচন করুন:' : 'আজকের নির্ধারিত ডিউটি অবস্থান:'}
+          {canEdit
+            ? 'আজকের ডিউটি অবস্থান বা ছুটির দিন (অফডে) নির্বাচন করুন:'
+            : 'আজকের নির্ধারিত ডিউটি অবস্থান:'}
         </p>
-        <div className="grid grid-cols-3 gap-3">
-          {options.map((status) => {
-            const active = dutyStatus === status;
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {options.map((opt) => {
+            const active = dutyStatus === opt.value;
+            const isOff = opt.value === 'OFFDAY';
             return (
               <button
-                key={status}
+                key={opt.value}
                 type="button"
                 disabled={!canEdit}
-                onClick={() => onSelect(status)}
-                className={`py-4 rounded-xl border-2 font-bold text-base transition-colors disabled:cursor-default ${
+                onClick={() => onSelect(opt.value)}
+                className={`p-3.5 rounded-xl border-2 text-center transition-colors disabled:cursor-default ${
                   active
-                    ? 'border-[#F26522] bg-[#F26522] text-white shadow-sm'
+                    ? isOff
+                      ? 'border-[#0A2558] bg-[#0A2558] text-white shadow-sm'
+                      : 'border-[#F26522] bg-[#F26522] text-white shadow-sm'
                     : 'border-neutral-200 bg-[#F9FAFB] text-neutral-800 hover:border-[#F26522]/60 disabled:hover:border-neutral-200'
                 }`}
               >
-                {status}
+                <div className="font-bold text-sm sm:text-base">{opt.label}</div>
+                <div
+                  className={`text-[11px] mt-1 ${
+                    active ? 'text-white/85' : 'text-neutral-500'
+                  }`}
+                >
+                  {opt.hint}
+                </div>
               </button>
             );
           })}

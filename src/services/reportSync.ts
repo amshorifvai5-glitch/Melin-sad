@@ -59,7 +59,7 @@ function sanitizeDailyReportPayload(data: DayReportData) {
   return {
     inTime: String(data.inTime || '').slice(0, 10),
     outTime: String(data.outTime || '').slice(0, 10),
-    dutyStatus: (['', 'HQ', 'TS', 'HQ/TS'].includes(data.dutyStatus)
+    dutyStatus: (['', 'HQ', 'TS', 'HQ/TS', 'OFFDAY'].includes(data.dutyStatus)
       ? data.dutyStatus
       : '') as DayReportData['dutyStatus'],
     basicTasks: data.basicTasks || {},

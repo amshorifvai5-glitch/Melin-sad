@@ -1,4 +1,4 @@
-import { DayReportData, MenuItemConfig } from '../types/report';
+import { DayReportData, DutyStatus, MenuItemConfig } from '../types/report';
 
 export const TOTAL_DESKS = 73;
 export const PROFILE_PHOTO_KEY = 'sorif_profile_photo';
@@ -235,6 +235,38 @@ export function formatBanglaDate(dateStr: string): string {
   });
 }
 
+export function isFridayIsoDate(dateStr: string): boolean {
+  const dateObj = new Date(`${dateStr}T12:00:00`);
+  if (Number.isNaN(dateObj.getTime())) return false;
+  return dateObj.getDay() === 5;
+}
+
+export function isDayOffStatus(dateStr: string, data: DayReportData): boolean {
+  if (data.dutyStatus === 'OFFDAY') return true;
+  if (!isFridayIsoDate(dateStr) || data.dutyStatus !== '') return false;
+  const basic = countBasicWorkProgress(data);
+  const desk = countDeskProgress(data);
+  const suppliesDone = SUPPLY_ITEMS.filter((s) => Boolean(data.supplies[s.id])).length;
+  return (
+    !data.inTime &&
+    !data.outTime &&
+    basic.done === 0 &&
+    desk.deskDone === 0 &&
+    desk.chairDone === 0 &&
+    suppliesDone === 0 &&
+    data.proofs.length === 0
+  );
+}
+
+export function getDutyStatusDisplayLabel(
+  status: DutyStatus,
+  autoOffDay = false
+): string {
+  if (status === 'OFFDAY') return 'অফডে (সাপ্তাহিক ছুটি)';
+  if (!status && autoOffDay) return 'অফডে (শুক্রবার)';
+  return status || 'নির্ধারিত নয়';
+}
+
 export function getNowTimeHHMM(): string {
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, '0');
@@ -336,21 +368,27 @@ export function buildClosingReportText(dateStr: string, data: DayReportData): st
   const breakMins = getTotalBreakMinutes(data);
   const suppliesDoneCount = SUPPLY_ITEMS.filter((s) => Boolean(data.supplies[s.id])).length;
   const totalExpense = getTotalExpenseAmount(data);
+  const isOffDay = isDayOffStatus(dateStr, data);
+  const dutyDisplay = getDutyStatusDisplayLabel(data.dutyStatus, isOffDay);
 
   const lines = [
     `কর্মী: ${PROFILE_INFO.displayNameEn} (ID: ${PROFILE_INFO.employeeId})`,
     `তারিখ: ${formatBanglaDate(dateStr)}`,
-    `ডিউটি অবস্থান: ${data.dutyStatus || 'উল্লেখ নেই'}`,
-    `In: ${data.inTime || '--:--'} | Out: ${data.outTime || '--:--'}`,
+    `ডিউটি অবস্থান: ${dutyDisplay}`,
+    `In: ${data.inTime || (isOffDay ? 'ছুটি' : '--:--')} | Out: ${data.outTime || (isOffDay ? 'ছুটি' : '--:--')}`,
     `মোট বিরতি: ${formatMinutesToHM(breakMins)}`,
-    `ডেস্ক ও চেয়ার ক্লিন: ${bothDone}/${TOTAL_DESKS} সম্পন্ন`,
-    `বেসিক কাজ: ${doneBasic}/${BASIC_TASKS.length} সম্পন্ন`,
-    `মালামাল রিফিল: ${suppliesDoneCount}/${SUPPLY_ITEMS.length} সম্পন্ন`,
+    `ডেস্ক ও চেয়ার ক্লিন: ${isOffDay && bothDone === 0 ? 'অফডে (প্রযোজ্য নয়)' : `${bothDone}/${TOTAL_DESKS} সম্পন্ন`}`,
+    `বেসিক কাজ: ${isOffDay && doneBasic === 0 ? 'অফডে (প্রযোজ্য নয়)' : `${doneBasic}/${BASIC_TASKS.length} সম্পন্ন`}`,
+    `মালামাল রিফিল: ${isOffDay && suppliesDoneCount === 0 ? 'অফডে (প্রযোজ্য নয়)' : `${suppliesDoneCount}/${SUPPLY_ITEMS.length} সম্পন্ন`}`,
     `অফিসের খরচ: ৳${totalExpense} (${data.expenses.length}টি আইটেম)`,
     `কাজের প্রমাণ ফটো: ${data.proofs.length}টি`,
     '',
     'আজকের সম্পন্ন কাজের বিবরণ:',
-    completedLines.length ? completedLines.join('\n') : 'কোনো কাজ সম্পন্ন মার্ক করা হয়নি',
+    completedLines.length
+      ? completedLines.join('\n')
+      : isOffDay
+      ? 'আজ সাপ্তাহিক ছুটি / অফডে ছিল। নিয়মিত অফিস ডিউটি নির্ধারিত ছিল না।'
+      : 'কোনো কাজ সম্পন্ন মার্ক করা হয়নি',
   ];
 
   if (data.expenses.length > 0) {
@@ -386,6 +424,8 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
   const { deskDone, chairDone, bothDone } = countDeskProgress(data);
   const { done: basicDone, total: basicTotal } = countBasicWorkProgress(data);
   const breakMins = getTotalBreakMinutes(data);
+  const isOffDay = isDayOffStatus(dateStr, data);
+  const dutyDisplay = getDutyStatusDisplayLabel(data.dutyStatus, isOffDay);
 
   const taskRows = BASIC_TASKS.map((task, idx) => {
     const entry = data.basicTasks[task.id];
@@ -393,7 +433,7 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
     return `<tr>
       <td>${idx + 1}</td>
       <td>${escapeHtml(task.text)}</td>
-      <td>${isDone ? 'সম্পন্ন' : 'বাকি'}</td>
+      <td>${isDone ? 'সম্পন্ন' : isOffDay ? 'অফডে' : 'বাকি'}</td>
       <td>${escapeHtml(entry?.time || '—')}</td>
     </tr>`;
   }).join('');
@@ -423,6 +463,8 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
   const supplyRows = SUPPLY_ITEMS.map((s) => {
     const statusHtml = data.supplies[s.id]
       ? '<strong style="color:#047857;">রিফিল সম্পন্ন</strong>'
+      : isOffDay
+      ? '<strong style="color:#64748b;">অফডে</strong>'
       : '<strong>বাকি</strong>';
     return `<li>${escapeHtml(s.label)}: ${statusHtml}</li>`;
   }).join('');
@@ -477,10 +519,10 @@ export function buildClosingReportHtml(dateStr: string, data: DayReportData): st
     <div class="muted">${escapeHtml(formatBanglaDate(dateStr))} · ${escapeHtml(PROFILE_INFO.department)} (${escapeHtml(PROFILE_INFO.workplace)})</div>
 
     <div class="grid">
-      <div class="stat"><div class="stat-label">ডিউটি অবস্থান</div><div class="stat-val">${escapeHtml(data.dutyStatus || 'উল্লেখ নেই')}</div></div>
-      <div class="stat"><div class="stat-label">In / Out সময়</div><div class="stat-val">${escapeHtml(data.inTime || '--:--')} – ${escapeHtml(data.outTime || '--:--')}</div></div>
-      <div class="stat"><div class="stat-label">বেসিক কাজ</div><div class="stat-val">${basicDone}/${basicTotal} সম্পন্ন</div></div>
-      <div class="stat"><div class="stat-label">ডেস্ক ও চেয়ার</div><div class="stat-val">ডেস্ক ${deskDone}/${TOTAL_DESKS} · চেয়ার ${chairDone}/${TOTAL_DESKS} (উভয় ${bothDone})</div></div>
+      <div class="stat"><div class="stat-label">ডিউটি অবস্থান</div><div class="stat-val">${escapeHtml(dutyDisplay)}</div></div>
+      <div class="stat"><div class="stat-label">In / Out সময়</div><div class="stat-val">${escapeHtml(data.inTime || (isOffDay ? 'ছুটি' : '--:--'))} – ${escapeHtml(data.outTime || (isOffDay ? 'ছুটি' : '--:--'))}</div></div>
+      <div class="stat"><div class="stat-label">বেসিক কাজ</div><div class="stat-val">${isOffDay && basicDone === 0 ? 'অফডে' : `${basicDone}/${basicTotal} সম্পন্ন`}</div></div>
+      <div class="stat"><div class="stat-label">ডেস্ক ও চেয়ার</div><div class="stat-val">${isOffDay && bothDone === 0 ? 'অফডে' : `ডেস্ক ${deskDone}/${TOTAL_DESKS} · চেয়ার ${chairDone}/${TOTAL_DESKS} (উভয় ${bothDone})`}</div></div>
       <div class="stat"><div class="stat-label">মোট বিরতি</div><div class="stat-val">${escapeHtml(formatMinutesToHM(breakMins))}</div></div>
     </div>
 

@@ -56,7 +56,7 @@ service cloud.firestore {
         && data.inTime is string && data.inTime.size() <= 10
         && data.outTime is string && data.outTime.size() <= 10
         && data.dutyStatus is string && data.dutyStatus.size() <= 10
-        && data.dutyStatus in ['', 'HQ', 'TS', 'HQ/TS']
+        && data.dutyStatus in ['', 'HQ', 'TS', 'HQ/TS', 'OFFDAY']
         && data.basicTasks is map && data.basicTasks.size() <= 50
         && data.extraBasicTasks is list && data.extraBasicTasks.size() <= 100
         && (data.extraBasicTasks.size() == 0 || data.extraBasicTasks[0] is map)

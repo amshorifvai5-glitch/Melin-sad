@@ -52,6 +52,7 @@ import {
   getTodayIsoDate,
   getTotalBreakMinutes,
   getTotalExpenseAmount,
+  isDayOffStatus,
 } from './data/portalData';
 import { auth, googleProvider, isOwnerAdmin } from './firebase';
 import {
@@ -453,6 +454,13 @@ export default function App() {
       ...prev,
       dutyStatus: prev.dutyStatus === status ? '' : status,
     }));
+    showToast(
+      dayData.dutyStatus === status
+        ? 'ডিউটি অবস্থান মুছে ফেলা হয়েছে'
+        : status === 'OFFDAY'
+        ? 'আজ অফডে (সাপ্তাহিক ছুটি) হিসেবে সেভ হয়েছে'
+        : `ডিউটি অবস্থান: ${status}`
+    );
   };
 
   const handleAddProof = async (proof: WorkProofEntry) => {
@@ -632,7 +640,9 @@ export default function App() {
       case 'basic-work':
         return `${basicProgress.done}/${basicProgress.total}`;
       case 'duty-location':
-        return dayData.dutyStatus || null;
+        return dayData.dutyStatus === 'OFFDAY'
+          ? 'অফডে'
+          : dayData.dutyStatus || (isDayOffStatus(currentDate, dayData) ? 'অফডে' : null);
       case 'desk-chair':
         return `${deskProgress.bothDone}/${TOTAL_DESKS}`;
       case 'break-time':
@@ -952,6 +962,7 @@ export default function App() {
                   todayVisitorCount={todayVisitorCount}
                   sectionIcons={SECTION_ICONS}
                   onNavigate={navigateTo}
+                  onMarkOffDay={() => handleSelectDutyStatus('OFFDAY')}
                 />
               )}
 
