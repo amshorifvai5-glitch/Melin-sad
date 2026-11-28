@@ -216,12 +216,23 @@ export function saveDayData(dateStr: string, data: DayReportData): boolean {
   }
 }
 
+export const DHAKA_TIMEZONE = 'Asia/Dhaka';
+
 export function getTodayIsoDate(): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: DHAKA_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const y = parts.find((p) => p.type === 'year')?.value;
+  const m = parts.find((p) => p.type === 'month')?.value;
+  const d = parts.find((p) => p.type === 'day')?.value;
+  if (y && m && d) return `${y}-${m}-${d}`;
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
+    now.getDate()
+  ).padStart(2, '0')}`;
 }
 
 export function formatBanglaDate(dateStr: string): string {
@@ -268,10 +279,56 @@ export function getDutyStatusDisplayLabel(
 }
 
 export function getNowTimeHHMM(): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: DHAKA_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const hh = parts.find((p) => p.type === 'hour')?.value;
+  const mm = parts.find((p) => p.type === 'minute')?.value;
+  if (hh && mm) return `${hh === '24' ? '00' : hh}:${mm}`;
   const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  return `${hh}:${mm}`;
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+export function formatDhakaClock(ms: number, withSeconds = true): string {
+  if (!ms) return '';
+  return new Date(ms).toLocaleTimeString('bn-BD', {
+    timeZone: DHAKA_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(withSeconds ? { second: '2-digit' } : {}),
+    hour12: true,
+  });
+}
+
+export function getDhakaLiveOfficeStatus(
+  ms: number,
+  isOffDay: boolean
+): { label: string; isInShift: boolean } {
+  if (isOffDay) {
+    return { label: 'সাপ্তাহিক ছুটি / অফডে', isInShift: false };
+  }
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: DHAKA_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date(ms));
+  const hh = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');
+  const mm = Number(parts.find((p) => p.type === 'minute')?.value ?? '0');
+  const mins = (hh === 24 ? 0 : hh) * 60 + mm;
+  const shiftStart = 9 * 60;
+  const shiftEnd = 19 * 60;
+
+  if (mins < shiftStart) {
+    return { label: 'অফিস শুরুর অপেক্ষা (সকাল ৯:০০)', isInShift: false };
+  }
+  if (mins < shiftEnd) {
+    return { label: 'অফিস ডিউটি চলছে', isInShift: true };
+  }
+  return { label: 'অফিস ডিউটি সমাপ্ত', isInShift: false };
 }
 
 export function timeToMinutes(hhmm: string): number | null {

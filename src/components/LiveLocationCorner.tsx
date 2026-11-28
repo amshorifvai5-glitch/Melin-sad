@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Check, ChevronUp, MapPin, Pencil, Radio, X } from 'lucide-react';
 import { DutyStatus, LiveLocationStatus } from '../types/report';
 import {
+  DHAKA_TIMEZONE,
   LIVE_LOCATION_PRESETS,
   MAX_LIVE_LOCATION_LABEL_LEN,
   MAX_LIVE_LOCATION_NOTE_LEN,
+  formatDhakaClock,
 } from '../data/portalData';
 
 interface LiveLocationCornerProps {
@@ -14,21 +16,15 @@ interface LiveLocationCornerProps {
   onSave: (payload: { locationLabel: string; note: string; isActive: boolean }) => Promise<void>;
 }
 
-function formatUpdatedClock(ms: number): string {
-  if (!ms) return '';
-  return new Date(ms).toLocaleTimeString('bn-BD', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function formatUpdatedDateTime(ms: number): string {
   if (!ms) return 'এখনো আপডেট করা হয়নি';
   return new Date(ms).toLocaleString('bn-BD', {
+    timeZone: DHAKA_TIMEZONE,
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: true,
   });
 }
 
@@ -44,13 +40,21 @@ export const LiveLocationCorner: React.FC<LiveLocationCornerProps> = ({
   const [isActiveInput, setIsActiveInput] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const effectiveLabel =
     status?.locationLabel ||
     (fallbackDutyStatus ? `${fallbackDutyStatus} অফিস` : 'অবস্থান সেট করা হয়নি');
   const effectiveNote = status?.note || '';
   const effectiveActive = status ? status.isActive : Boolean(fallbackDutyStatus);
-  const clockText = formatUpdatedClock(status?.updatedAtMs || 0);
+  const liveClockText = formatDhakaClock(nowMs, true);
 
   useEffect(() => {
     if (!expanded) return;
@@ -125,9 +129,8 @@ export const LiveLocationCorner: React.FC<LiveLocationCornerProps> = ({
               <div className="min-w-0">
                 <div className="text-xs font-bold text-white">আমি এখন কোথায় আছি (লাইভ)</div>
                 <div className="text-[11px] text-neutral-400 font-mono-num truncate">
-                  {status?.updatedAtMs
-                    ? `আপডেট: ${formatUpdatedDateTime(status.updatedAtMs)}`
-                    : 'সর্বশেষ অবস্থান'}
+                  এখন: {liveClockText}
+                  {status?.updatedAtMs ? ` · আপডেট: ${formatUpdatedDateTime(status.updatedAtMs)}` : ''}
                 </div>
               </div>
             </div>
@@ -281,12 +284,8 @@ export const LiveLocationCorner: React.FC<LiveLocationCornerProps> = ({
             <span className={effectiveActive ? 'text-emerald-400' : 'text-neutral-400'}>
               লাইভ অবস্থান
             </span>
-            {clockText && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="font-mono-num">{clockText}</span>
-              </>
-            )}
+            <span aria-hidden="true">·</span>
+            <span className="font-mono-num tabular-nums text-neutral-200">{liveClockText}</span>
           </div>
           <div className="text-xs font-bold text-white truncate flex items-center gap-1 mt-0.5">
             <MapPin className="w-3 h-3 text-[#F26522] shrink-0" />

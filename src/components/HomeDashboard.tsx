@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Boxes,
   CalendarOff,
@@ -18,7 +18,10 @@ import {
   countBasicWorkProgress,
   countDeskProgress,
   formatBanglaDate,
+  formatDhakaClock,
+  getDhakaLiveOfficeStatus,
   getDutyStatusDisplayLabel,
+  getTodayIsoDate,
   getTotalBreakMinutes,
   getTotalExpenseAmount,
   isDayOffStatus,
@@ -53,6 +56,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onNavigate,
   onMarkOffDay,
 }) => {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const basicProgress = countBasicWorkProgress(dayData);
   const deskProgress = countDeskProgress(dayData);
   const breakMinutes = getTotalBreakMinutes(dayData);
@@ -62,6 +74,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const isExplicitOffDay = dayData.dutyStatus === 'OFFDAY';
   const isFriday = isFridayIsoDate(currentDate);
   const dutyLabel = getDutyStatusDisplayLabel(dayData.dutyStatus, isOffDay);
+  const isTodaySelected = currentDate === getTodayIsoDate();
+  const liveDhakaClock = formatDhakaClock(nowMs, true);
+  const liveOfficeStatus = getDhakaLiveOfficeStatus(nowMs, isOffDay);
 
   const basicPercent =
     basicProgress.total > 0
@@ -234,6 +249,10 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <span className="font-mono-num text-neutral-300">
                   {formatBanglaDate(currentDate)}
                 </span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono-num tabular-nums text-white font-semibold">
+                  {liveDhakaClock}
+                </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight text-balance">
                 দৈনিক কাজের রিপোর্ট ও কার্যক্রম
@@ -246,6 +265,20 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 <span>কর্মস্থল: {PROFILE_INFO.workplace}</span>
                 <span aria-hidden="true">·</span>
                 <span>ডিউটি: {PROFILE_INFO.shiftLabel}</span>
+                {isTodaySelected && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span
+                      className={
+                        liveOfficeStatus.isInShift
+                          ? 'text-emerald-400 font-semibold'
+                          : 'text-neutral-300'
+                      }
+                    >
+                      {liveOfficeStatus.label}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
