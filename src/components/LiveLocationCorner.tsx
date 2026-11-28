@@ -127,7 +127,7 @@ export const LiveLocationCorner: React.FC<LiveLocationCornerProps> = ({
                 <Radio className="w-4 h-4" />
               </span>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-white">আমি এখন কোথায় আছি (লাইভ)</div>
+                <div className="text-xs font-bold text-white">আহম্মেদ এর বর্তমান লোকেশন</div>
                 <div className="text-[11px] text-neutral-400 font-mono-num truncate">
                   এখন: {liveClockText}
                   {status?.updatedAtMs ? ` · আপডেট: ${formatUpdatedDateTime(status.updatedAtMs)}` : ''}
@@ -266,7 +266,11 @@ export const LiveLocationCorner: React.FC<LiveLocationCornerProps> = ({
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
         className="bg-[#0B0B0D]/95 backdrop-blur-md border border-[#F26522]/45 hover:border-[#F26522] rounded-xl px-3.5 py-2 shadow-xl flex items-center gap-2.5 text-left transition-all max-w-[260px] sm:max-w-[300px] group"
-        title={canEdit ? 'এখন কোথায় আছেন আপডেট করুন' : 'লাইভ অবস্থান দেখুন'}
+        title={
+          canEdit
+            ? 'আহম্মেদ এর বর্তমান লোকেশন আপডেট করুন'
+            : 'আহম্মেদ এর বর্তমান লোকেশন দেখুন'
+        }
       >
         <span className="relative flex h-2.5 w-2.5 shrink-0">
           {effectiveActive && (
